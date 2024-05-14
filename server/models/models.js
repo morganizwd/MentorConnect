@@ -126,13 +126,13 @@ User.hasMany(Review, { foreignKey: 'toUserId', as: 'receivedReviews' });
 Review.belongsTo(User, { foreignKey: 'toUserId', as: 'reviewee' });
 
 module.exports = {
-    User, 
-    Faculty, 
-    Specialization, 
+    User,
+    Faculty,
+    Specialization,
     Contacts,
-    Review, 
-    Resource, 
-    MentorshipSession, 
-    Post, 
+    Review,
+    Resource,
+    MentorshipSession,
+    Post,
     Forum,
 }

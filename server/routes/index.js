@@ -10,6 +10,6 @@ router.use('/posts', require('./postRouter'));
 router.use('/mentorshipSessions', require('./mentorshipSessionRouter'));
 router.use('/forums', require('./forumRouter'));
 router.use('/faculties', require('./facultyRouter'));
-router.use('/contacts', require('./contactRouter'));
+router.use('/contacts', require('./contactsRouter'));
 
 module.exports = router;
