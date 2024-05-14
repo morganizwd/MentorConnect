@@ -1,15 +1,11 @@
 const Router = require('express').Router;
 const router = new Router();
+const tagController = require('../controllers/tagController');
 
-router.use('/users', require('./userRoutes'));
-router.use('/tags', require('./tagRoutes'));
-router.use('/specializations', require('./specializationRoutes'));
-router.use('/reviews', require('./reviewRoutes'));
-router.use('/resources', require('./resourceRoutes'));
-router.use('/posts', require('./postRoutes'));
-router.use('/mentorshipSessions', require('./mentorshipSessionRoutes'));
-router.use('/forums', require('./forumRoutes'));
-router.use('/faculties', require('./facultyRoutes'));
-router.use('/contacts', require('./contactRoutes'));
+router.post('/', tagController.create);
+router.get('/', tagController.findAll);
+router.get('/:id', tagController.findOne);
+router.put('/:id', tagController.update);
+router.delete('/:id', tagController.delete);
 
 module.exports = router;
