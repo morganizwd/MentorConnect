@@ -1,11 +1,23 @@
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
 const { Resource } = require('../models/models'); // Ensure the correct path to your models
 
 const resourceController = {
     // Create a new Resource
     create: async (req, res) => {
         try {
-            const { title, description, file, userId } = req.body;
-            const resource = await Resource.create({ title, description, file, userId });
+            const { title, description } = req.body;
+            const file = req.file;
+            const userId = req.userId;
+
+            const resource = await Resource.create({
+                title,
+                description,
+                file: file.buffer, // если используете memoryStorage
+                userId
+            });
+
             res.status(201).json(resource);
         } catch (error) {
             res.status(500).json({ message: 'Error creating the resource', error: error.message });
@@ -62,6 +74,21 @@ const resourceController = {
             }
         } catch (error) {
             res.status(500).json({ message: 'Error deleting the resource', error: error.message });
+        }
+    },
+
+    download: async (req, res) => {
+        try {
+            const resource = await Resource.findByPk(req.params.id);
+            if (resource) {
+                res.setHeader('Content-Type', 'application/octet-stream');
+                res.setHeader('Content-Disposition', `attachment; filename="${resource.title}"`);
+                res.send(resource.file);
+            } else {
+                res.status(404).json({ message: 'Resource not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ message: 'Error downloading the file', error: error.message });
         }
     }
 };

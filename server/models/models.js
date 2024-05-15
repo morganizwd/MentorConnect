@@ -7,7 +7,7 @@ const User = sequelize.define('user', {
     lastName: { type: DataTypes.STRING },
     email: { type: DataTypes.STRING, unique: true },
     passwordHash: { type: DataTypes.STRING },
-    role: { type: DataTypes.STRING, defaultValue: "GUEST" },
+    role: { type: DataTypes.STRING, defaultValue: "MENTEE" },
     course: { type: DataTypes.SMALLINT, allowNull: true },
     recordBookNumber: { type: DataTypes.INTEGER, unique: true, allowNull: true },
 
