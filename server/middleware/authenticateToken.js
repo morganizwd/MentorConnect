@@ -14,6 +14,7 @@ const authenticateToken = (req, res, next) => {
         }
 
         req.userId = user.userId; // assuming the token contains { userId: ... }
+        req.userRole = user.role; // assuming the token contains { role: ... }
         next();
     });
 };
