@@ -27,6 +27,10 @@ const userController = {
             if (!isMatch) {
                 return res.status(400).json({ message: 'Incorrect password' });
             }
+            if (!process.env.JWT_SECRET) {
+                console.error("JWT Secret is not defined.");
+                return res.status(500).json({ message: "Server configuration error" });
+            }
             const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
             res.json({ token, userId: user.id });
         } catch (error) {

@@ -8,8 +8,8 @@ const User = sequelize.define('user', {
     email: { type: DataTypes.STRING, unique: true },
     passwordHash: { type: DataTypes.STRING },
     role: { type: DataTypes.STRING, defaultValue: "GUEST" },
-    course: { type: DataTypes.SMALLINT, allowNull: false },
-    recordBookNumber: { type: DataTypes.INTEGER, unique: true, allowNull: false },
+    course: { type: DataTypes.SMALLINT, allowNull: true },
+    recordBookNumber: { type: DataTypes.INTEGER, unique: true, allowNull: true },
 
     facultyId: { type: DataTypes.INTEGER }, // Foreign key for faculty
     specializationId: { type: DataTypes.INTEGER }, // Foreign key for specialization
