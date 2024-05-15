@@ -34,12 +34,20 @@ const Contacts = sequelize.define('contacts', {
     userId: { type: DataTypes.INTEGER, allowNull: false }
 });
 
-const Review = sequelize.define('review', {
+const MentorReview = sequelize.define('mentorReview', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     fromUserId: { type: DataTypes.INTEGER, allowNull: false },
-    toUserId: { type: DataTypes.INTEGER, allowNull: false },
     comment: { type: DataTypes.STRING, allowNull: true },
-    rating: { type: DataTypes.FLOAT, allowNull: false }
+    rating: { type: DataTypes.FLOAT, allowNull: false },
+    mentorshipSessionId: { type: DataTypes.INTEGER, allowNull: false }
+});
+
+const MenteeReview = sequelize.define('menteeReview', {
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    fromUserId: { type: DataTypes.INTEGER, allowNull: false },
+    comment: { type: DataTypes.STRING, allowNull: true },
+    rating: { type: DataTypes.FLOAT, allowNull: false },
+    mentorshipSessionId: { type: DataTypes.INTEGER, allowNull: false }
 });
 
 const MentorshipSession = sequelize.define('mentorshipSession', {
@@ -119,18 +127,22 @@ User.hasMany(MentorshipSession, {
     as: 'learningSessions'
 });
 
-User.hasMany(Review, { foreignKey: 'fromUserId', as: 'writtenReviews' });
-Review.belongsTo(User, { foreignKey: 'fromUserId', as: 'reviewer' });
+User.hasMany(MentorReview, { foreignKey: 'fromUserId' });
+MentorReview.belongsTo(User, { foreignKey: 'fromUserId' });
+MentorReview.hasOne(MentorshipSession, { foreignKey: 'mentorshipSessionId' });
 
-User.hasMany(Review, { foreignKey: 'toUserId', as: 'receivedReviews' });
-Review.belongsTo(User, { foreignKey: 'toUserId', as: 'reviewee' });
+User.hasMany(MenteeReview, { foreignKey: 'fromUserId' });
+MenteeReview.belongsTo(User, { foreignKey: 'fromUserId' });
+MenteeReview.hasOne(MentorshipSession, { foreignKey: 'mentorshipSessionId' });
+
 
 module.exports = {
     User,
     Faculty,
     Specialization,
     Contacts,
-    Review,
+    MenteeReview,
+    MentorReview,
     Resource,
     MentorshipSession,
     Post,

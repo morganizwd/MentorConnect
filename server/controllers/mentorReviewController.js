@@ -1,11 +1,18 @@
-const { Review } = require('../models/models'); // Убедитесь, что путь к моделям верный
+const { MentorReview } = require('../models/models'); // Убедитесь, что путь к моделям верный
 
-const reviewController = {
+const mentorReviewController = {
     // Создание нового отзыва
     create: async (req, res) => {
         try {
-            const { fromUserId, toUserId, comment, rating } = req.body;
-            const review = await Review.create({ fromUserId, toUserId, comment, rating });
+            const { comment, rating, mentorshipSessionId } = req.body;
+            const fromUserId = req.userId;
+
+            const review = await MentorReview.create({
+                fromUserId,
+                comment,
+                rating,
+                mentorshipSessionId
+            });
             res.status(201).json(review);
         } catch (error) {
             res.status(500).json({ message: 'Error creating the review', error: error.message });
@@ -15,7 +22,7 @@ const reviewController = {
     // Получение списка всех отзывов
     findAll: async (req, res) => {
         try {
-            const reviews = await Review.findAll();
+            const reviews = await MentorReview.findAll();
             res.status(200).json(reviews);
         } catch (error) {
             res.status(500).json({ message: 'Error retrieving reviews', error: error.message });
@@ -25,7 +32,7 @@ const reviewController = {
     // Получение одного отзыва по ID
     findOne: async (req, res) => {
         try {
-            const review = await Review.findByPk(req.params.id);
+            const review = await MentorReview.findByPk(req.params.id);
             if (review) {
                 res.status(200).json(review);
             } else {
@@ -40,7 +47,7 @@ const reviewController = {
     update: async (req, res) => {
         try {
             const { comment, rating } = req.body;
-            const result = await Review.update({ comment, rating }, { where: { id: req.params.id } });
+            const result = await MentorReview.update({ comment, rating }, { where: { id: req.params.id } });
             if (result[0] === 1) {
                 res.status(200).json({ message: 'Review updated successfully' });
             } else {
@@ -54,7 +61,7 @@ const reviewController = {
     // Удаление отзыва по ID
     delete: async (req, res) => {
         try {
-            const result = await Review.destroy({ where: { id: req.params.id } });
+            const result = await MentorReview.destroy({ where: { id: req.params.id } });
             if (result === 1) {
                 res.status(200).json({ message: 'Review deleted successfully' });
             } else {
@@ -66,4 +73,4 @@ const reviewController = {
     }
 };
 
-module.exports = reviewController;
+module.exports = mentorReviewController;
