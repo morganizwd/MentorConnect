@@ -1,7 +1,7 @@
-const { Specialization } = require('../models/models'); // Предполагается, что все модели экспортируются из одного файла
+const { Specialization } = require('../models/models');
 
 const specializationController = {
-    // Создание новой специализации
+
     create: async (req, res) => {
         try {
             const { name } = req.body;
@@ -12,7 +12,7 @@ const specializationController = {
         }
     },
 
-    // Получение списка всех специализаций
+
     findAll: async (req, res) => {
         try {
             const specializations = await Specialization.findAll();
@@ -22,7 +22,7 @@ const specializationController = {
         }
     },
 
-    // Получение одной специализации по ID
+
     findOne: async (req, res) => {
         try {
             const specialization = await Specialization.findByPk(req.params.id);
@@ -36,7 +36,7 @@ const specializationController = {
         }
     },
 
-    // Обновление специализации по ID
+
     update: async (req, res) => {
         try {
             const { name } = req.body;
@@ -51,7 +51,7 @@ const specializationController = {
         }
     },
 
-    // Удаление специализации по ID
+
     delete: async (req, res) => {
         try {
             const result = await Specialization.destroy({ where: { id: req.params.id } });

@@ -1,10 +1,10 @@
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
-const { Resource } = require('../models/models'); // Ensure the correct path to your models
+const { Resource } = require('../models/models');
 
 const resourceController = {
-    // Create a new Resource
+
     create: async (req, res) => {
         try {
             const { title, description } = req.body;
@@ -14,7 +14,7 @@ const resourceController = {
             const resource = await Resource.create({
                 title,
                 description,
-                file: file.buffer, // если используете memoryStorage
+                file: file.buffer,
                 userId
             });
 
@@ -24,7 +24,7 @@ const resourceController = {
         }
     },
 
-    // Retrieve all Resources
+
     findAll: async (req, res) => {
         try {
             const resources = await Resource.findAll();
@@ -34,7 +34,7 @@ const resourceController = {
         }
     },
 
-    // Retrieve a single Resource by id
+
     findOne: async (req, res) => {
         try {
             const resource = await Resource.findByPk(req.params.id);
@@ -48,7 +48,7 @@ const resourceController = {
         }
     },
 
-    // Update a Resource by id
+
     update: async (req, res) => {
         try {
             const { title, description, file, userId } = req.body;
@@ -63,7 +63,7 @@ const resourceController = {
         }
     },
 
-    // Delete a Resource by id
+
     delete: async (req, res) => {
         try {
             const result = await Resource.destroy({ where: { id: req.params.id } });

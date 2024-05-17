@@ -1,7 +1,7 @@
-const { MentorReview } = require('../models/models'); // Убедитесь, что путь к моделям верный
+const { MentorReview } = require('../models/models'); 
 
 const mentorReviewController = {
-    // Создание нового отзыва
+
     create: async (req, res) => {
         try {
             const { comment, rating, mentorshipSessionId } = req.body;
@@ -19,7 +19,7 @@ const mentorReviewController = {
         }
     },
 
-    // Получение списка всех отзывов
+
     findAll: async (req, res) => {
         try {
             const reviews = await MentorReview.findAll();
@@ -29,7 +29,7 @@ const mentorReviewController = {
         }
     },
 
-    // Получение одного отзыва по ID
+
     findOne: async (req, res) => {
         try {
             const review = await MentorReview.findByPk(req.params.id);
@@ -43,7 +43,7 @@ const mentorReviewController = {
         }
     },
 
-    // Обновление отзыва по ID
+
     update: async (req, res) => {
         try {
             const { comment, rating } = req.body;
@@ -58,7 +58,7 @@ const mentorReviewController = {
         }
     },
 
-    // Удаление отзыва по ID
+
     delete: async (req, res) => {
         try {
             const result = await MentorReview.destroy({ where: { id: req.params.id } });

@@ -1,10 +1,11 @@
-const { Tag } = require('../models/models'); // Предположим, что все модели экспортируются из одного файла
+const { Tag } = require('../models/models');
 
 const tagController = {
-    // Создание нового тега
+
     create: async (req, res) => {
         try {
-            const { name, userId } = req.body;
+            const { name } = req.body;
+            const userId = req.userId; 
             const tag = await Tag.create({ name, userId });
             res.status(201).json(tag);
         } catch (error) {
@@ -12,7 +13,7 @@ const tagController = {
         }
     },
 
-    // Получение списка всех тегов
+
     findAll: async (req, res) => {
         try {
             const tags = await Tag.findAll();
@@ -22,7 +23,7 @@ const tagController = {
         }
     },
 
-    // Получение одного тега по ID
+
     findOne: async (req, res) => {
         try {
             const tag = await Tag.findByPk(req.params.id);
@@ -36,10 +37,11 @@ const tagController = {
         }
     },
 
-    // Обновление тега по ID
+
     update: async (req, res) => {
         try {
-            const { name, userId } = req.body;
+            const { name } = req.body;
+            const userId = req.userId; 
             const result = await Tag.update({ name, userId }, { where: { id: req.params.id } });
             if (result[0] === 1) {
                 res.status(200).json({ message: 'Tag updated successfully' });
@@ -51,7 +53,7 @@ const tagController = {
         }
     },
 
-    // Удаление тега по ID
+
     delete: async (req, res) => {
         try {
             const result = await Tag.destroy({ where: { id: req.params.id } });

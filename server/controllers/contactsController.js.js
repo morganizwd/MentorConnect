@@ -1,7 +1,7 @@
-const { Contacts } = require('../models/models'); // Adjust if your model imports differ
+const { Contacts } = require('../models/models'); 
 
 const contactsController = {
-    // Create a new Contact
+
     create: async (req, res) => {
         try {
             const { vk, telegram, phoneNumber, userId } = req.body;
@@ -12,7 +12,7 @@ const contactsController = {
         }
     },
 
-    // Retrieve all Contacts
+
     findAll: async (req, res) => {
         try {
             const contacts = await Contacts.findAll();
@@ -22,7 +22,7 @@ const contactsController = {
         }
     },
 
-    // Retrieve a single Contact by id
+
     findOne: async (req, res) => {
         try {
             const contact = await Contacts.findByPk(req.params.id);
@@ -36,7 +36,7 @@ const contactsController = {
         }
     },
 
-    // Update a Contact by id
+
     update: async (req, res) => {
         try {
             const { vk, telegram, phoneNumber, userId } = req.body;
@@ -51,7 +51,7 @@ const contactsController = {
         }
     },
 
-    // Delete a Contact by id
+
     delete: async (req, res) => {
         try {
             const result = await Contacts.destroy({ where: { id: req.params.id } });

@@ -1,10 +1,11 @@
-const { Post } = require('../models/models'); // Ensure the correct path to your models
+const { Post } = require('../models/models'); 
 
 const postController = {
-    // Create a new post
+
     create: async (req, res) => {
         try {
-            const { authorId, content, forumId } = req.body;
+            const { content, forumId } = req.body;
+            const authorId = req.userId; 
             const post = await Post.create({ authorId, content, forumId });
             res.status(201).json(post);
         } catch (error) {
@@ -12,7 +13,7 @@ const postController = {
         }
     },
 
-    // Retrieve all posts
+
     findAll: async (req, res) => {
         try {
             const posts = await Post.findAll();
@@ -22,7 +23,7 @@ const postController = {
         }
     },
 
-    // Retrieve a single post by id
+
     findOne: async (req, res) => {
         try {
             const post = await Post.findByPk(req.params.id);
@@ -36,10 +37,11 @@ const postController = {
         }
     },
 
-    // Update a post by id
+
     update: async (req, res) => {
         try {
-            const { content, authorId, forumId } = req.body;
+            const { content, forumId } = req.body;
+            const authorId = req.userId; 
             const result = await Post.update({ content, authorId, forumId }, { where: { id: req.params.id } });
             if (result[0] === 1) {
                 res.status(200).json({ message: 'Post updated successfully' });
@@ -47,11 +49,11 @@ const postController = {
                 res.status(404).json({ message: 'Post not found or no update necessary' });
             }
         } catch (error) {
-            res.status(500).json({ message: 'Error updating the post', error: error.message });
+            res.status500().json({ message: 'Error updating the post', error: error.message });
         }
     },
 
-    // Delete a post by id
+    
     delete: async (req, res) => {
         try {
             const result = await Post.destroy({ where: { id: req.params.id } });

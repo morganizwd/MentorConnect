@@ -1,23 +1,18 @@
-const { MentorshipSession } = require('../models/models'); // Ensure the correct path to your models
+const { MentorshipSession } = require('../models/models');
 
 const mentorshipSessionController = {
-    // Create a new Mentorship Session
+
     create: async (req, res) => {
         try {
             const { scheduledTime, isFinished, mentorId, menteeId } = req.body;
-            const session = await MentorshipSession.create({
-                scheduledTime,
-                isFinished,
-                mentorId,
-                menteeId
-            });
-            res.status(201).json(session);
+            const mentorshipSession = await MentorshipSession.create({ scheduledTime, isFinished, mentorId, menteeId });
+            res.status(201).json(mentorshipSession);
         } catch (error) {
             res.status(500).json({ message: 'Error creating the mentorship session', error: error.message });
         }
     },
 
-    // Retrieve all Mentorship Sessions
+
     findAll: async (req, res) => {
         try {
             const sessions = await MentorshipSession.findAll();
@@ -27,7 +22,7 @@ const mentorshipSessionController = {
         }
     },
 
-    // Retrieve a single Mentorship Session by id
+
     findOne: async (req, res) => {
         try {
             const session = await MentorshipSession.findByPk(req.params.id);
@@ -41,7 +36,7 @@ const mentorshipSessionController = {
         }
     },
 
-    // Update a Mentorship Session by id
+
     update: async (req, res) => {
         try {
             const { scheduledTime, isFinished, mentorId, menteeId } = req.body;
@@ -63,7 +58,7 @@ const mentorshipSessionController = {
         }
     },
 
-    // Delete a Mentorship Session by id
+
     delete: async (req, res) => {
         try {
             const result = await MentorshipSession.destroy({ where: { id: req.params.id } });

@@ -1,7 +1,7 @@
-const { Forum } = require('../models/models'); // Make sure this path is correct based on your project structure
+const { Forum } = require('../models/models'); 
 
 const forumController = {
-    // Create a new forum
+
     create: async (req, res) => {
         try {
             const { title, description } = req.body;
@@ -12,7 +12,7 @@ const forumController = {
         }
     },
 
-    // Retrieve all forums
+
     findAll: async (req, res) => {
         try {
             const forums = await Forum.findAll();
@@ -22,7 +22,7 @@ const forumController = {
         }
     },
 
-    // Retrieve a single forum by id
+
     findOne: async (req, res) => {
         try {
             const forum = await Forum.findByPk(req.params.id);
@@ -36,7 +36,7 @@ const forumController = {
         }
     },
 
-    // Update a forum by id
+
     update: async (req, res) => {
         try {
             const { title, description } = req.body;
@@ -51,7 +51,7 @@ const forumController = {
         }
     },
 
-    // Delete a forum by id
+    
     delete: async (req, res) => {
         try {
             const result = await Forum.destroy({ where: { id: req.params.id } });

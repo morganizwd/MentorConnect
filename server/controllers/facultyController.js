@@ -1,7 +1,7 @@
-const { Faculty } = require('../models/models'); // Ensure the correct path to your models
+const { Faculty } = require('../models/models');
 
 const facultyController = {
-    // Create a new faculty
+
     create: async (req, res) => {
         try {
             const { name } = req.body;
@@ -12,7 +12,7 @@ const facultyController = {
         }
     },
 
-    // Retrieve all faculties
+
     findAll: async (req, res) => {
         try {
             const faculties = await Faculty.findAll();
@@ -22,7 +22,7 @@ const facultyController = {
         }
     },
 
-    // Retrieve a single faculty by id
+
     findOne: async (req, res) => {
         try {
             const faculty = await Faculty.findByPk(req.params.id);
@@ -36,7 +36,7 @@ const facultyController = {
         }
     },
 
-    // Update a faculty by id
+
     update: async (req, res) => {
         try {
             const { name } = req.body;
@@ -51,7 +51,7 @@ const facultyController = {
         }
     },
 
-    // Delete a faculty by id
+
     delete: async (req, res) => {
         try {
             const result = await Faculty.destroy({ where: { id: req.params.id } });

@@ -1,13 +1,13 @@
-const { User } = require('../models/models');  // Убедитесь, что путь к моделям верный
+const { User } = require('../models/models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const userController = {
-    // Регистрация пользователя
+
     registration: async (req, res) => {
         try {
             const { firstName, lastName, email, password, role, course, recordBookNumber, facultyId, specializationId } = req.body;
-            const passwordHash = await bcrypt.hash(password, 12);  // Хеширование пароля перед сохранением
+            const passwordHash = await bcrypt.hash(password, 12);
             const user = await User.create({ firstName, lastName, email, passwordHash, role, course, recordBookNumber, facultyId, specializationId });
             res.status(201).json(user);
         } catch (error) {
@@ -15,7 +15,7 @@ const userController = {
         }
     },
 
-    // Вход пользователя
+
     login: async (req, res) => {
         try {
             const { email, password } = req.body;
@@ -38,11 +38,11 @@ const userController = {
         }
     },
 
-    // Авторизация (проверка)
+
     auth: async (req, res) => {
         try {
-            // Допустим, токен приходит в заголовках запроса
-            const token = req.headers.authorization.split(' ')[1];  // "Bearer TOKEN"
+
+            const token = req.headers.authorization.split(' ')[1];  
             if (!token) {
                 return res.status(401).json({ message: "Not authorized" });
             }
@@ -54,7 +54,7 @@ const userController = {
         }
     },
 
-    // Retrieve one user by ID
+
     findOne: async (req, res) => {
         try {
             const user = await User.findByPk(req.params.id);
@@ -67,7 +67,7 @@ const userController = {
         }
     },
 
-    // Retrieve all users
+
     findAll: async (req, res) => {
         try {
             const users = await User.findAll();
@@ -77,7 +77,7 @@ const userController = {
         }
     },
 
-    // Delete a user
+    
     delete: async (req, res) => {
         try {
             const result = await User.destroy({

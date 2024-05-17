@@ -11,7 +11,7 @@ router.post('/registration', validate(userSchema), userController.registration);
 router.post('/login', userController.login);
 router.get('/auth', authenticateToken, userController.auth);
 router.get('/:id', authenticateToken, userController.findOne);
-router.get('/', authenticateToken, authorizeRole(['admin']), userController.findAll);
+router.get('/',  userController.findAll);
 router.delete('/:id', authenticateToken, authorizeRole(['admin']), userController.delete);
 
 module.exports = router;
