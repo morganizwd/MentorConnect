@@ -1,11 +1,13 @@
 const Router = require('express').Router;
-const router = new Router();
+const router = Router(); // Используйте Router() для создания нового маршрутизатора
 const facultyController = require('../controllers/facultyController');
+const authenticateToken = require('../middleware/authenticateToken');
+const authorizeRole = require('../middleware/authorizeRole');
 
-router.post('/', facultyController.create);
-router.get('/', facultyController.findAll);
-router.get('/:id', facultyController.findOne);
-router.put('/:id', facultyController.update);
-router.delete('/:id', facultyController.delete);
+router.post('/', authenticateToken, authorizeRole(['admin']), facultyController.create);
+router.get('/', authenticateToken, facultyController.findAll);
+router.get('/:id', authenticateToken, facultyController.findOne);
+router.put('/:id', authenticateToken, authorizeRole(['admin']), facultyController.update);
+router.delete('/:id', authenticateToken, authorizeRole(['admin']), facultyController.delete);
 
 module.exports = router;
