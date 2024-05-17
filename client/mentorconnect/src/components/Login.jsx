@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux'; // Удален `useSelector` и `selectIsAuth`
+import { useDispatch } from 'react-redux';
 import { fetchAuth } from '../redux/slices/userSlice';
 import { TextField, Button, Container, Typography, Alert, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -34,8 +34,9 @@ const Login = () => {
     if (!validateForm()) return;
 
     try {
-      await dispatch(fetchAuth(form)).unwrap(); // Удален `resultAction`
+      const resultAction = await dispatch(fetchAuth(form)).unwrap();
       setMessage('Login successful');
+      localStorage.setItem('token', resultAction.token); // Сохранение токена в localStorage
       navigate('/'); // Redirect to home after successful login
     } catch (err) {
       setMessage('Login failed: ' + err.message);

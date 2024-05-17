@@ -13,6 +13,10 @@ export const fetchRegister = createAsyncThunk('user/fetchRegister', async (param
 });
 
 export const fetchAuthMe = createAsyncThunk('user/fetchAuthMe', async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
     const { data } = await axios.get('/users/auth');
     return data;
 });
@@ -45,6 +49,7 @@ const userSlice = createSlice({
         logout: (state) => {
             state.data = null;
             state.status = 'null';
+            localStorage.removeItem('token'); // Удаление токена из localStorage при логауте
         }
     },
     extraReducers: (builder) => {
@@ -56,6 +61,7 @@ const userSlice = createSlice({
             .addCase(fetchAuth.fulfilled, (state, action) => {
                 state.status = 'loaded';
                 state.data = action.payload;
+                localStorage.setItem('token', action.payload.token); // Сохранение токена в localStorage
             })
             .addCase(fetchAuth.rejected, (state) => {
                 state.status = 'error';
@@ -80,6 +86,7 @@ const userSlice = createSlice({
             .addCase(fetchRegister.fulfilled, (state, action) => {
                 state.status = 'loaded';
                 state.data = action.payload;
+                localStorage.setItem('token', action.payload.token); // Сохранение токена в localStorage
             })
             .addCase(fetchRegister.rejected, (state) => {
                 state.status = 'error';

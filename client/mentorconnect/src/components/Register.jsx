@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux'; // Удален `useSelector` и `selectIsAuth`
+import { useDispatch } from 'react-redux';
 import { fetchRegister } from '../redux/slices/userSlice';
 import { TextField, Button, Container, Typography, Alert, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -45,9 +45,10 @@ const Register = () => {
     if (!validateForm()) return;
 
     try {
-      await dispatch(fetchRegister(form)).unwrap(); // Удален `resultAction`
+      const resultAction = await dispatch(fetchRegister(form)).unwrap();
       setMessage('Registration successful');
-      navigate('/login'); // Redirect to login after successful registration
+      localStorage.setItem('token', resultAction.token); // Сохранение токена в localStorage
+      navigate('/'); // Redirect to login after successful registration
     } catch (err) {
       setMessage('Registration failed: ' + err.message);
     }
