@@ -1,5 +1,5 @@
 const Router = require('express').Router;
-const contactsController = require('../controllers/contactsController');
+const contactsController = require('../controllers/contactsController.js');
 const authenticateToken = require('../middleware/authenticateToken');
 const authorizeRole = require('../middleware/authorizeRole');
 const validate = require('../middleware/validate');
