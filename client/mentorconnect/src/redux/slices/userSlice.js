@@ -3,17 +3,17 @@ import axios from '../axios';
 
 // Thunks для различных действий
 export const fetchAuth = createAsyncThunk('user/fetchAuth', async (params) => {
-    const { data } = await axios.post('/login', params);
+    const { data } = await axios.post('/users/login', params);
     return data;
 });
 
 export const fetchRegister = createAsyncThunk('user/fetchRegister', async (params) => {
-    const { data } = await axios.post('/registration', params);
+    const { data } = await axios.post('/users/registration', params);
     return data;
 });
 
 export const fetchAuthMe = createAsyncThunk('user/fetchAuthMe', async () => {
-    const { data } = await axios.get('/auth');
+    const { data } = await axios.get('/users/auth');
     return data;
 });
 
