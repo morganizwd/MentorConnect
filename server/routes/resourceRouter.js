@@ -4,16 +4,17 @@ const authenticateToken = require('../middleware/authenticateToken');
 const authorizeRole = require('../middleware/authorizeRole');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
+const validate = require('../middleware/validate');
+const { resourceSchema } = require('../validationSchemas');
 
-const router = Router(); // Используйте Router() для создания нового маршрутизатора
+const router = Router();
 
-router.post('/', authenticateToken, authorizeRole(['mentee', 'mentor', 'admin']), upload.single('file'), resourceController.create);
-router.get('/', resourceController.findAll); // Доступен всем, включая неаутентифицированных пользователей
-router.get('/:id', resourceController.findOne); // Доступен всем, включая неаутентифицированных пользователей
-router.put('/:id', authenticateToken, authorizeRole(['mentee', 'mentor', 'admin']), resourceController.update);
+router.post('/', authenticateToken, authorizeRole(['mentee', 'mentor', 'admin']), upload.single('file'), validate(resourceSchema), resourceController.create);
+router.get('/', resourceController.findAll);
+router.get('/:id', resourceController.findOne);
+router.put('/:id', authenticateToken, authorizeRole(['mentee', 'mentor', 'admin']), validate(resourceSchema), resourceController.update);
 router.delete('/:id', authenticateToken, authorizeRole(['mentee', 'mentor', 'admin']), resourceController.delete);
 
-// New route for downloading files
-router.get('/:id/download', resourceController.download); // Доступен всем, включая неаутентифицированных пользователей
+router.get('/:id/download', resourceController.download);
 
 module.exports = router;

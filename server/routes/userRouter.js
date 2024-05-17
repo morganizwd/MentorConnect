@@ -2,14 +2,16 @@ const Router = require('express').Router;
 const userController = require('../controllers/userController.js');
 const authenticateToken = require('../middleware/authenticateToken');
 const authorizeRole = require('../middleware/authorizeRole');
+const validate = require('../middleware/validate');
+const { userSchema } = require('../validationSchemas');
 
-const router = Router(); // Используйте Router() для создания нового маршрутизатора
+const router = Router();
 
-router.post('/registration', userController.registration);
+router.post('/registration', validate(userSchema), userController.registration);
 router.post('/login', userController.login);
-router.get('/auth', userController.auth);
-router.get('/:id', userController.findOne); // Get one user by ID
-router.get('/', authenticateToken, authorizeRole(['admin']), userController.findAll); // Get all users (Only admin)
-router.delete('/:id', authenticateToken, authorizeRole(['admin']), userController.delete); // Delete a user (Only admin)
+router.get('/auth', authenticateToken, userController.auth);
+router.get('/:id', authenticateToken, userController.findOne);
+router.get('/', authenticateToken, authorizeRole(['admin']), userController.findAll);
+router.delete('/:id', authenticateToken, authorizeRole(['admin']), userController.delete);
 
 module.exports = router;
