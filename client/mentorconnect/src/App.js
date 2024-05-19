@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { fetchAuthMe } from './redux/slices/userSlice';
+import { fetchAuthMe, selectIsAuth } from './redux/slices/userSlice';
 import Register from './components/Register';
 import Login from './components/Login';
 import AdminTagMenu from './components/admin/AdminTagMenu';
@@ -19,9 +19,9 @@ import Forum from './components/forums/Forum';
 import Resources from './components/Resources/Resources';
 import MentorProfile from './components/MentorSearch/MentorProfile';
 import MentorSearch from './components/MentorSearch/MentorSearch';
-import { useSelector } from 'react-redux';
-import { selectIsAuth } from './redux/slices/userSlice';
-// import Home from './components/Home'; 
+import MySessions from './components/Sessions/MySessions';
+import Menu from './components/Menu';
+import HomePage from './components/HomePage';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -36,32 +36,39 @@ const App = () => {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
+      <div style={{ display: 'flex' }}>
+        {isAuth && <Menu />}
+        <div style={{ flex: 1, padding: 20 }}>
+          <Routes>
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
 
-        <Route path="/" element={<div>Home Page</div>} />
+            <Route path="/" element={<HomePage />} />
 
-        <Route path="/admin/tags" element={<AdminTagMenu />} />
-        <Route path="/admin/specializations" element={<AdminSpecializations />} />
-        <Route path="/admin/resources" element={<AdminResources />} />
-        <Route path="/admin/posts" element={<AdminPosts />} />
-        <Route path="/admin/mentorship-sessions" element={<AdminMentorshipSessions />} />
-        <Route path="/admin/reviews" element={<AdminReviews />} />
-        <Route path="/admin/forums" element={<AdminForums />} />
-        <Route path="/admin/faculties" element={<AdminFaculties />} />
-        <Route path="/admin/contacts" element={<AdminContacts />} />
+            <Route path="/admin/tags" element={<AdminTagMenu />} />
+            <Route path="/admin/specializations" element={<AdminSpecializations />} />
+            <Route path="/admin/resources" element={<AdminResources />} />
+            <Route path="/admin/posts" element={<AdminPosts />} />
+            <Route path="/admin/mentorship-sessions" element={<AdminMentorshipSessions />} />
+            <Route path="/admin/reviews" element={<AdminReviews />} />
+            <Route path="/admin/forums" element={<AdminForums />} />
+            <Route path="/admin/faculties" element={<AdminFaculties />} />
+            <Route path="/admin/contacts" element={<AdminContacts />} />
 
-        <Route path="/profile" element={<UserProfile />} />
-        
-        <Route exact path="/forums" element={<ForumList />} />
-        <Route path="/forums/:id" element={<Forum />} />
+            <Route path="/profile" element={<UserProfile />} />
 
-        <Route path='/resourses' element={<Resources> </Resources>} />
+            <Route exact path="/forums" element={<ForumList />} />
+            <Route path="/forums/:id" element={<Forum />} />
 
-        <Route path='/mentors' element={<MentorSearch> </MentorSearch>} />
-        <Route path="/mentors/:id" element={<MentorProfile> </MentorProfile>} />
-      </Routes>
+            <Route path='/resourses' element={<Resources />} />
+
+            <Route path='/mentors' element={<MentorSearch />} />
+            <Route path="/mentors/:id" element={<MentorProfile />} />
+
+            <Route path="/sessions" element={<MySessions />} />
+          </Routes>
+        </div>
+      </div>
     </Router>
   );
 };

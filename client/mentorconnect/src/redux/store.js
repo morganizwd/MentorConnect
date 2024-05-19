@@ -4,12 +4,13 @@ import { tagReducer } from './slices/tagSlice';
 import { specializationReducer } from './slices/specializationSlice';
 import { resourceReducer } from './slices/resourceSlice';
 import { postReducer } from './slices/postSlice';
-import { mentorshipSessionReducer } from './slices/mentorshipSessionSlice';
+import  mentorshipSessionReducer  from './slices/mentorshipSessionSlice';
 import { mentorReviewReducer } from './slices/mentorReviewSlice';
 import { menteeReviewReducer } from './slices/menteeReviewSlice';
 import { forumReducer } from './slices/forumSlice';
 import { facultyReducer } from './slices/facultySlice';
 import { contactReducer } from './slices/contactSlice';
+
 // Импортируйте другие редюсеры по мере их создания
 
 const store = configureStore({
