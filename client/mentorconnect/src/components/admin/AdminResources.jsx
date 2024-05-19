@@ -6,6 +6,7 @@ import {
   updateResource,
   deleteResource,
 } from '../../redux/slices/resourceSlice';
+import { fetchGetAllUsers } from '../../redux/slices/userSlice';
 import {
   Container,
   Typography,
@@ -17,31 +18,51 @@ import {
   ListItemText,
   IconButton,
   ListItemSecondaryAction,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
-import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Edit as EditIcon, GetApp as GetAppIcon } from '@mui/icons-material';
+import axios from '../../redux/axios';
 
 const AdminResources = () => {
   const dispatch = useDispatch();
   const resources = useSelector((state) => state.resources.resources);
   const status = useSelector((state) => state.resources.status);
   const error = useSelector((state) => state.resources.error);
+  const users = useSelector((state) => state.user.users);
 
   const [form, setForm] = useState({
     title: '',
     description: '',
     file: null,
   });
+  const [filters, setFilters] = useState({
+    title: '',
+    startDate: '',
+    endDate: '',
+  });
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchResources());
+    dispatch(fetchGetAllUsers());
   }, [dispatch]);
 
-  const handleChange = (e) => {
+  const handleFormChange = (e) => {
     const { name, value, files } = e.target;
     setForm({
       ...form,
       [name]: files ? files[0] : value,
+    });
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters({
+      ...filters,
+      [name]: value,
     });
   };
 
@@ -53,7 +74,7 @@ const AdminResources = () => {
     }
 
     if (editingId) {
-      dispatch(updateResource({ id: editingId, resourceData: formData }));
+      dispatch(updateResource({ id: editingId, formData: formData }));
       setEditingId(null);
     } else {
       dispatch(createResource(formData));
@@ -79,6 +100,40 @@ const AdminResources = () => {
     dispatch(deleteResource(id));
   };
 
+  const handleDownload = async (id, title) => {
+    try {
+      const response = await axios.get(`/resources/${id}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      const contentDisposition = response.headers['content-disposition'];
+      const fileName = contentDisposition ? contentDisposition.split('filename=')[1].replace(/['"]/g, '') : title;
+      link.href = url;
+      link.setAttribute('download', fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Error downloading file', err);
+    }
+  };
+
+  const getAuthorNameById = (id) => {
+    const author = users.find((user) => user.id === id);
+    return author ? `${author.firstName} ${author.lastName}` : 'Unknown Author';
+  };
+
+  const filterResources = () => {
+    return resources.filter((resource) => {
+      const matchesTitle = filters.title ? resource.title.toLowerCase().includes(filters.title.toLowerCase()) : true;
+      const matchesStartDate = filters.startDate ? new Date(resource.createdAt) >= new Date(filters.startDate) : true;
+      const matchesEndDate = filters.endDate ? new Date(resource.createdAt) <= new Date(filters.endDate) : true;
+
+      return matchesTitle && matchesStartDate && matchesEndDate;
+    });
+  };
+
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
@@ -95,7 +150,7 @@ const AdminResources = () => {
           autoComplete="title"
           autoFocus
           value={form.title}
-          onChange={handleChange}
+          onChange={handleFormChange}
         />
         <TextField
           margin="normal"
@@ -105,7 +160,7 @@ const AdminResources = () => {
           name="description"
           autoComplete="description"
           value={form.description}
-          onChange={handleChange}
+          onChange={handleFormChange}
         />
         <input
           accept="*"
@@ -113,24 +168,77 @@ const AdminResources = () => {
           id="file"
           type="file"
           name="file"
-          onChange={handleChange}
+          onChange={handleFormChange}
         />
         <label htmlFor="file">
           <Button variant="contained" component="span">
-            Upload File
+            {form.file ? form.file.name : 'Upload File'}
           </Button>
         </label>
         <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
           {editingId ? 'Update Resource' : 'Create Resource'}
         </Button>
       </Box>
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Filters
+        </Typography>
+        <TextField
+          margin="normal"
+          fullWidth
+          id="filter-title"
+          label="Filter by Title"
+          name="title"
+          value={filters.title}
+          onChange={handleFilterChange}
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          id="startDate"
+          label="Filter by Start Date"
+          name="startDate"
+          type="date"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          value={filters.startDate}
+          onChange={handleFilterChange}
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          id="endDate"
+          label="Filter by End Date"
+          name="endDate"
+          type="date"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          value={filters.endDate}
+          onChange={handleFilterChange}
+        />
+      </Box>
       {status === 'loading' && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
       <List>
-        {resources.map((resource) => (
+        {filterResources().map((resource) => (
           <ListItem key={resource.id}>
-            <ListItemText primary={resource.title} secondary={resource.description} />
+            <ListItemText
+              primary={resource.title}
+              secondary={
+                <>
+                  <div>Description: {resource.description}</div>
+                  <div>Author: {getAuthorNameById(resource.userId)}</div>
+                  <div>Created At: {new Date(resource.createdAt).toLocaleString()}</div>
+                  <div>Updated At: {new Date(resource.updatedAt).toLocaleString()}</div>
+                </>
+              }
+            />
             <ListItemSecondaryAction>
+              <IconButton edge="end" aria-label="download" onClick={() => handleDownload(resource.id, resource.title)}>
+                <GetAppIcon />
+              </IconButton>
               <IconButton edge="end" aria-label="edit" onClick={() => handleEdit(resource)}>
                 <EditIcon />
               </IconButton>

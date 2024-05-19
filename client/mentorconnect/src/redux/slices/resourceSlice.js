@@ -12,11 +12,7 @@ export const fetchResourceById = createAsyncThunk('resources/fetchResourceById',
     return data;
 });
 
-export const createResource = createAsyncThunk('resources/createResource', async (resourceData) => {
-    const formData = new FormData();
-    for (const key in resourceData) {
-        formData.append(key, resourceData[key]);
-    }
+export const createResource = createAsyncThunk('resources/createResource', async (formData) => {
     const { data } = await axios.post('/resources', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
@@ -25,11 +21,7 @@ export const createResource = createAsyncThunk('resources/createResource', async
     return data;
 });
 
-export const updateResource = createAsyncThunk('resources/updateResource', async ({ id, resourceData }) => {
-    const formData = new FormData();
-    for (const key in resourceData) {
-        formData.append(key, resourceData[key]);
-    }
+export const updateResource = createAsyncThunk('resources/updateResource', async ({ id, formData }) => {
     const { data } = await axios.patch(`/resources/${id}`, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',

@@ -10,9 +10,9 @@ const User = sequelize.define('user', {
     role: { type: DataTypes.STRING, defaultValue: "MENTEE" },
     course: { type: DataTypes.SMALLINT, allowNull: true },
     recordBookNumber: { type: DataTypes.INTEGER, unique: true, allowNull: true },
-
     facultyId: { type: DataTypes.INTEGER },
     specializationId: { type: DataTypes.INTEGER },
+    avatar: { type: DataTypes.STRING, allowNull: true }, // Поле для аватара
 });
 
 const Faculty = sequelize.define('faculty', {
@@ -80,7 +80,8 @@ const Resource = sequelize.define('resource', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.STRING, allowNull: true },
-    file: { type: DataTypes.BLOB, allowNull: false },
+    filePath: { type: DataTypes.STRING, allowNull: false },
+    fileType: { type: DataTypes.STRING, allowNull: true },
     userId: { type: DataTypes.INTEGER, allowNull: false },
 });
 

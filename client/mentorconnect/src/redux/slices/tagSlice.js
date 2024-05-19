@@ -12,8 +12,8 @@ export const fetchTagById = createAsyncThunk('tags/fetchTagById', async (id) => 
     return data;
 });
 
-export const createTag = createAsyncThunk('tags/createTag', async (tagData) => {
-    const { data } = await axios.post('/tags', tagData);
+export const createTag = createAsyncThunk('tags/createTag', async ({ name, userId }) => {
+    const { data } = await axios.post('/tags', { name, userId });
     return data;
 });
 
@@ -25,6 +25,11 @@ export const updateTag = createAsyncThunk('tags/updateTag', async ({ id, tagData
 export const deleteTag = createAsyncThunk('tags/deleteTag', async (id) => {
     await axios.delete(`/tags/${id}`);
     return id;
+});
+
+export const fetchTagsByUserId = createAsyncThunk('tags/fetchTagsByUserId', async (userId) => {
+    const { data } = await axios.get(`/tags?userId=${userId}`);
+    return data;
 });
 
 const initialState = {
@@ -48,6 +53,17 @@ const tagSlice = createSlice({
                 state.tags = action.payload;
             })
             .addCase(fetchTags.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
+            })
+            .addCase(fetchTagsByUserId.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchTagsByUserId.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.tags = action.payload;
+            })
+            .addCase(fetchTagsByUserId.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.error.message;
             })

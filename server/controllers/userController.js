@@ -1,9 +1,10 @@
 const { User } = require('../models/models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 
 const userController = {
-
     registration: async (req, res) => {
         try {
             const { firstName, lastName, email, password, role, course, recordBookNumber, facultyId, specializationId } = req.body;
@@ -14,7 +15,6 @@ const userController = {
             res.status(500).json({ message: error.message });
         }
     },
-
 
     login: async (req, res) => {
         try {
@@ -38,11 +38,9 @@ const userController = {
         }
     },
 
-
     auth: async (req, res) => {
         try {
-
-            const token = req.headers.authorization.split(' ')[1];  
+            const token = req.headers.authorization.split(' ')[1];
             if (!token) {
                 return res.status(401).json({ message: "Not authorized" });
             }
@@ -53,7 +51,6 @@ const userController = {
             res.status(500).json({ message: error.message });
         }
     },
-
 
     findOne: async (req, res) => {
         try {
@@ -67,7 +64,6 @@ const userController = {
         }
     },
 
-
     findAll: async (req, res) => {
         try {
             const users = await User.findAll();
@@ -77,7 +73,49 @@ const userController = {
         }
     },
 
-    
+    update: async (req, res) => {
+        try {
+            const { firstName, lastName, email, password, role, course, recordBookNumber, facultyId, specializationId } = req.body;
+            const userId = req.params.id;
+
+            // Загрузка аватара
+            let avatarPath;
+            if (req.file) {
+                const uploadDir = path.join(__dirname, '../uploads/avatars');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                avatarPath = `/uploads/avatars/${userId}_${req.file.originalname}`;
+                fs.writeFileSync(path.join(uploadDir, `${userId}_${req.file.originalname}`), req.file.buffer);
+            }
+
+            const updateData = {
+                firstName, lastName, email, role, course, recordBookNumber, facultyId, specializationId
+            };
+
+            if (avatarPath) {
+                updateData.avatar = avatarPath;
+            }
+
+            if (password) {
+                updateData.passwordHash = await bcrypt.hash(password, 12);
+            }
+
+            const [updated] = await User.update(updateData, {
+                where: { id: userId }
+            });
+
+            if (updated) {
+                const updatedUser = await User.findByPk(userId);
+                res.json(updatedUser);
+            } else {
+                res.status(404).json({ message: 'User not found' });
+            }
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
     delete: async (req, res) => {
         try {
             const result = await User.destroy({

@@ -36,10 +36,20 @@ export const deleteUser = createAsyncThunk('user/deleteUser', async (userId) => 
     return userId;
 });
 
+export const updateUser = createAsyncThunk('user/updateUser', async ({ id, formData }) => {
+    const { data } = await axios.patch(`/users/${id}`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return data;
+});
+
 const initialState = {
     data: null,
     status: 'loading',
     users: [],
+    error: null,
 };
 
 const userSlice = createSlice({
@@ -96,9 +106,14 @@ const userSlice = createSlice({
                 state.status = 'loading';
             })
             .addCase(fetchUserById.fulfilled, (state, action) => {
-                if (!state.data) state.data = {};
-                state.data[action.meta.arg] = action.payload;
                 state.status = 'loaded';
+                const user = action.payload;
+                const existingUser = state.users.find((u) => u.id === user.id);
+                if (existingUser) {
+                    Object.assign(existingUser, user);
+                } else {
+                    state.users.push(user);
+                }
             })
             .addCase(fetchUserById.rejected, (state) => {
                 state.status = 'error';
@@ -115,6 +130,9 @@ const userSlice = createSlice({
             })
             .addCase(deleteUser.fulfilled, (state, action) => {
                 state.users = state.users.filter(user => user.id !== action.payload);
+            })
+            .addCase(updateUser.fulfilled, (state, action) => {
+                state.data = action.payload;
             });
     },
 });

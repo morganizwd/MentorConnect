@@ -1,11 +1,10 @@
 const { Tag } = require('../models/models');
 
 const tagController = {
-
     create: async (req, res) => {
         try {
             const { name } = req.body;
-            const userId = req.userId; 
+            const userId = req.userId;
             const tag = await Tag.create({ name, userId });
             res.status(201).json(tag);
         } catch (error) {
@@ -13,16 +12,15 @@ const tagController = {
         }
     },
 
-
     findAll: async (req, res) => {
         try {
-            const tags = await Tag.findAll();
+            const { userId } = req.query;
+            const tags = userId ? await Tag.findAll({ where: { userId } }) : await Tag.findAll();
             res.status(200).json(tags);
         } catch (error) {
             res.status(500).json({ message: 'Error retrieving tags', error: error.message });
         }
     },
-
 
     findOne: async (req, res) => {
         try {
@@ -37,11 +35,10 @@ const tagController = {
         }
     },
 
-
     update: async (req, res) => {
         try {
             const { name } = req.body;
-            const userId = req.userId; 
+            const userId = req.userId;
             const result = await Tag.update({ name, userId }, { where: { id: req.params.id } });
             if (result[0] === 1) {
                 res.status(200).json({ message: 'Tag updated successfully' });
@@ -52,7 +49,6 @@ const tagController = {
             res.status(500).json({ message: 'Error updating the tag', error: error.message });
         }
     },
-
 
     delete: async (req, res) => {
         try {

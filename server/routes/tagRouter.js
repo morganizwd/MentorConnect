@@ -5,7 +5,7 @@ const authorizeRole = require('../middleware/authorizeRole');
 const authorizeOwnerOrAdmin = require('../middleware/authorizeOwnerOrAdmin');
 const validate = require('../middleware/validate');
 const { tagSchema, tagUpdateSchema } = require('../validationSchemas');
-const { Tag } = require('../models/models'); 
+const { Tag } = require('../models/models');
 
 const router = Router();
 
@@ -13,6 +13,6 @@ router.post('/', authenticateToken, authorizeRole(['admin', 'mentee', 'mentor'])
 router.get('/', authenticateToken, tagController.findAll);
 router.get('/:id', authenticateToken, tagController.findOne);
 router.patch('/:id', authenticateToken, authorizeOwnerOrAdmin(Tag), validate(tagUpdateSchema), tagController.update);
-router.delete('/:id', authenticateToken, authorizeOwnerOrAdmin(Tag), tagController.delete); 
+router.delete('/:id', authenticateToken, authorizeOwnerOrAdmin(Tag), tagController.delete);
 
 module.exports = router;

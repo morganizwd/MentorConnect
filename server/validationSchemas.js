@@ -19,7 +19,6 @@ const resourceSchema = Joi.object({
 });
 
 const postSchema = Joi.object({
-    title: Joi.string().min(1).max(255).required(),
     content: Joi.string().required(),
     forumId: Joi.number().integer().required(),
 });
@@ -73,7 +72,7 @@ const userUpdateSchema = Joi.object({
     lastName: Joi.string().min(1).max(50),
     email: Joi.string().email(),
     password: Joi.string().min(8), // Только для регистрации, не сохраняйте пароль напрямую в базу данных
-    role: Joi.string().valid('MENTEE', 'MENTOR', 'ADMIN'),
+    role: Joi.string().valid('mentee', 'mentor', 'admin'),
     course: Joi.number().integer().min(1).max(10).allow(null),
     recordBookNumber: Joi.number().integer().allow(null),
     facultyId: Joi.number().integer(),
@@ -86,7 +85,6 @@ const resourceUpdateSchema = Joi.object({
 });
 
 const postUpdateSchema = Joi.object({
-    title: Joi.string().min(1).max(255),
     content: Joi.string(),
 });
 

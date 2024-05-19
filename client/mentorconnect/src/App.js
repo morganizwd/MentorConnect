@@ -13,6 +13,12 @@ import AdminReviews from './components/admin/AdminReviews';
 import AdminForums from './components/admin/AdminForums';
 import AdminFaculties from './components/admin/AdminFaculty';
 import AdminContacts from './components/admin/AdminContacts';
+import UserProfile from './components/UserProfile';
+import ForumList from './components/forums/ForumList';
+import Forum from './components/forums/Forum';
+import Resources from './components/Resources/Resources';
+import MentorProfile from './components/MentorSearch/MentorProfile';
+import MentorSearch from './components/MentorSearch/MentorSearch';
 import { useSelector } from 'react-redux';
 import { selectIsAuth } from './redux/slices/userSlice';
 // import Home from './components/Home'; 
@@ -33,7 +39,9 @@ const App = () => {
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+
         <Route path="/" element={<div>Home Page</div>} />
+
         <Route path="/admin/tags" element={<AdminTagMenu />} />
         <Route path="/admin/specializations" element={<AdminSpecializations />} />
         <Route path="/admin/resources" element={<AdminResources />} />
@@ -43,6 +51,16 @@ const App = () => {
         <Route path="/admin/forums" element={<AdminForums />} />
         <Route path="/admin/faculties" element={<AdminFaculties />} />
         <Route path="/admin/contacts" element={<AdminContacts />} />
+
+        <Route path="/profile" element={<UserProfile />} />
+        
+        <Route exact path="/forums" element={<ForumList />} />
+        <Route path="/forums/:id" element={<Forum />} />
+
+        <Route path='/resourses' element={<Resources> </Resources>} />
+
+        <Route path='/mentors' element={<MentorSearch> </MentorSearch>} />
+        <Route path="/mentors/:id" element={<MentorProfile> </MentorProfile>} />
       </Routes>
     </Router>
   );

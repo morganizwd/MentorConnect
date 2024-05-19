@@ -1,9 +1,7 @@
 const Router = require('express').Router;
-const resourceController = require('../controllers/resourceController');
+const { resourceController, upload } = require('../controllers/resourceController');
 const authenticateToken = require('../middleware/authenticateToken');
 const authorizeRole = require('../middleware/authorizeRole');
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() });
 const validate = require('../middleware/validate');
 const { resourceSchema, resourceUpdateSchema } = require('../validationSchemas');
 
@@ -26,21 +24,20 @@ router.post(
     resourceController.create
 );
 
-router.get('/', resourceController.findAll); 
-router.get('/:id', resourceController.findOne); 
+router.get('/', resourceController.findAll);
+router.get('/:id', resourceController.findOne);
 
 router.patch(
     '/:id',
     authenticateToken,
     authorizeRole(['mentee', 'mentor', 'admin']),
-    upload.single('file'), 
+    upload.single('file'),
     validate(resourceUpdateSchema),
     resourceController.update
 );
 
 router.delete('/:id', authenticateToken, authorizeRole(['mentee', 'mentor', 'admin']), resourceController.delete);
 
-
-router.get('/:id/download', resourceController.download); 
+router.get('/:id/download', resourceController.download);
 
 module.exports = router;

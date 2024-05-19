@@ -7,6 +7,11 @@ export const fetchContacts = createAsyncThunk('contacts/fetchContacts', async ()
     return data;
 });
 
+export const fetchContactsByUserId = createAsyncThunk('contacts/fetchContactsByUserId', async (userId) => {
+    const { data } = await axios.get(`/contacts?userId=${userId}`);
+    return data;
+});
+
 export const fetchContactById = createAsyncThunk('contacts/fetchContactById', async (id) => {
     const { data } = await axios.get(`/contacts/${id}`);
     return data;
@@ -48,6 +53,17 @@ const contactSlice = createSlice({
                 state.contacts = action.payload;
             })
             .addCase(fetchContacts.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
+            })
+            .addCase(fetchContactsByUserId.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchContactsByUserId.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.contacts = action.payload;
+            })
+            .addCase(fetchContactsByUserId.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.error.message;
             })
