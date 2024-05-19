@@ -8,8 +8,8 @@ const { facultySchema, facultyUpdateSchema } = require('../validationSchemas');
 const router = Router();
 
 router.post('/', authenticateToken, authorizeRole(['admin']), validate(facultySchema), facultyController.create);
-router.get('/', authenticateToken, facultyController.findAll);
-router.get('/:id', authenticateToken, facultyController.findOne);
+router.get('/', facultyController.findAll);
+router.get('/:id', facultyController.findOne);
 router.patch('/:id', authenticateToken, authorizeRole(['admin']), validate(facultyUpdateSchema), facultyController.update);
 router.delete('/:id', authenticateToken, authorizeRole(['admin']), facultyController.delete);
 

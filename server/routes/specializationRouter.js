@@ -8,8 +8,8 @@ const { specializationSchema, specializationUpdateSchema } = require('../validat
 const router = Router();
 
 router.post('/', authenticateToken, authorizeRole(['admin']), validate(specializationSchema), specializationController.create);
-router.get('/', authenticateToken, specializationController.findAll);
-router.get('/:id', authenticateToken, specializationController.findOne);
+router.get('/', specializationController.findAll);
+router.get('/:id', specializationController.findOne);
 router.patch('/:id', authenticateToken, authorizeRole(['admin']), validate(specializationUpdateSchema), specializationController.update);
 router.delete('/:id', authenticateToken, authorizeRole(['admin']), specializationController.delete);
 
