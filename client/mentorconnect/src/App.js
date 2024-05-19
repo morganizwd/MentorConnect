@@ -37,7 +37,7 @@ const App = () => {
   return (
     <Router>
       <div style={{ display: 'flex' }}>
-        {isAuth && <Menu />}
+        <Menu />
         <div style={{ flex: 1, padding: 20 }}>
           <Routes>
             <Route path="/register" element={<Register />} />
