@@ -31,7 +31,7 @@ const userController = {
                 console.error("JWT Secret is not defined.");
                 return res.status(500).json({ message: "Server configuration error" });
             }
-            const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '24h' });
             res.json({ token, userId: user.id });
         } catch (error) {
             res.status(500).json({ message: error.message });
