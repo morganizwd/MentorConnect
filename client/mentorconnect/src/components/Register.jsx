@@ -1,3 +1,4 @@
+// src/components/Register.jsx
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegister } from '../redux/slices/userSlice';
@@ -14,6 +15,7 @@ import {
     FormControl,
     InputLabel,
     Link,
+    CircularProgress,
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +23,7 @@ import { motion } from 'framer-motion'; // Импортируем framer-motion
 import registerIllustration from '../assets/registerIllustration.png'; // Добавьте вашу иллюстрацию
 import decorative1 from '../assets/decorative1.png'; // Дополнительная декоративная иллюстрация
 import decorative2 from '../assets/decorative2.png'; // Дополнительная декоративная иллюстрация
+import { registerSchema } from '../validation/registerValidation'; // Импортируем схему валидации
 
 // Styled Components
 
@@ -115,17 +118,8 @@ const Register = () => {
         specializationId: '',
     });
     const [errors, setErrors] = useState({});
-    const [message, setMessage] = useState('');
-    const [visibleFields, setVisibleFields] = useState({
-        firstName: true, // Первое поле всегда видно
-        lastName: false,
-        email: false,
-        password: false,
-        course: false,
-        recordBookNumber: false,
-        facultyId: false,
-        specializationId: false,
-    });
+    const [message, setMessage] = useState({ text: '', severity: 'info' });
+    const [isSubmitting, setIsSubmitting] = useState(false); // Состояние загрузки
 
     const faculties = useSelector((state) => state.faculties.faculties);
     const specializations = useSelector((state) => state.specializations.specializations);
@@ -137,61 +131,100 @@ const Register = () => {
 
     useEffect(() => {
         // Проверяем, какие поля заполнены и делаем видимыми следующие
-        if (form.firstName && !visibleFields.lastName) {
+        if (form.firstName && !errors.firstName && !visibleFields.lastName) {
             setVisibleFields((prev) => ({ ...prev, lastName: true }));
         }
-        if (form.lastName && !visibleFields.email) {
+        if (form.lastName && !errors.lastName && !visibleFields.email) {
             setVisibleFields((prev) => ({ ...prev, email: true }));
         }
-        if (form.email && !visibleFields.password) {
+        if (form.email && !errors.email && !visibleFields.password) {
             setVisibleFields((prev) => ({ ...prev, password: true }));
         }
-        if (form.password && !visibleFields.course) {
+        if (form.password && !errors.password && !visibleFields.course) {
             setVisibleFields((prev) => ({ ...prev, course: true }));
         }
-        if (form.course && !visibleFields.recordBookNumber) {
+        if (form.course && !errors.course && !visibleFields.recordBookNumber) {
             setVisibleFields((prev) => ({ ...prev, recordBookNumber: true }));
         }
-        if (form.recordBookNumber && !visibleFields.facultyId) {
+        if (form.recordBookNumber && !errors.recordBookNumber && !visibleFields.facultyId) {
             setVisibleFields((prev) => ({ ...prev, facultyId: true }));
         }
-        if (form.facultyId && !visibleFields.specializationId) {
+        if (form.facultyId && !errors.facultyId && !visibleFields.specializationId) {
             setVisibleFields((prev) => ({ ...prev, specializationId: true }));
         }
-    }, [form, visibleFields]);
+    }, [form, errors]);
+
+    const [visibleFields, setVisibleFields] = useState({
+        firstName: true, // Первое поле всегда видно
+        lastName: false,
+        email: false,
+        password: false,
+        course: false,
+        recordBookNumber: false,
+        facultyId: false,
+        specializationId: false,
+    });
 
     const handleChange = (e) => {
         setForm({
             ...form,
             [e.target.name]: e.target.value,
         });
+        // Очистка ошибки для поля при изменении
+        setErrors({
+            ...errors,
+            [e.target.name]: '',
+        });
+        // Очистка общего сообщения
+        setMessage({ text: '', severity: 'info' });
     };
 
     const validateForm = () => {
+        const { error } = registerSchema.validate(form, { abortEarly: false });
+        if (!error) {
+            setErrors({});
+            return true;
+        }
         const newErrors = {};
-        if (!form.firstName) newErrors.firstName = 'Имя обязательно';
-        if (!form.lastName) newErrors.lastName = 'Фамилия обязательна';
-        if (!form.email) newErrors.email = 'Электронная почта обязательна';
-        if (!form.password) newErrors.password = 'Пароль обязателен';
-        if (!form.facultyId) newErrors.facultyId = 'Факультет обязателен';
-        if (!form.specializationId) newErrors.specializationId = 'Специализация обязательна';
+        error.details.forEach((detail) => {
+            newErrors[detail.path[0]] = detail.message;
+        });
         setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return false;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
+        setIsSubmitting(true); // Начало отправки
+
         try {
             const resultAction = await dispatch(fetchRegister(form)).unwrap();
-            setMessage('Регистрация прошла успешно');
+            setMessage({ text: 'Регистрация прошла успешно', severity: 'success' });
             localStorage.setItem('token', resultAction.token); // Сохранение токена в localStorage
             navigate('/'); // Redirect to home after successful registration
         } catch (err) {
-            setMessage('Ошибка регистрации: ' + err.message);
+            // Обработка ошибок от сервера
+            if (err.response && err.response.data && err.response.data.message) {
+                setMessage({ text: `Ошибка регистрации: ${err.response.data.message}`, severity: 'error' });
+            } else {
+                setMessage({ text: `Ошибка регистрации: ${err.message}`, severity: 'error' });
+            }
+        } finally {
+            setIsSubmitting(false); // Завершение отправки
         }
     };
+
+    // Автоматическое скрытие сообщений через 5 секунд
+    useEffect(() => {
+        if (message.text) {
+            const timer = setTimeout(() => {
+                setMessage({ text: '', severity: 'info' });
+            }, 5000); // Скрыть через 5 секунд
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
 
     // Определяем анимационные варианты
     const variants = {
@@ -210,7 +243,7 @@ const Register = () => {
                     <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: '700', color: '#333', fontSize: '2.5rem' }}>
                         Регистрация
                     </Typography>
-                    {message && <Alert severity="info" sx={{ mb: 4, fontSize: '1rem' }}>{message}</Alert>}
+                    {message.text && <Alert severity={message.severity} sx={{ mb: 4, fontSize: '1rem' }}>{message.text}</Alert>}
                     <Box component="form" onSubmit={handleSubmit} noValidate>
                         {/* Поле Имя */}
                         <MotionBox
@@ -329,7 +362,7 @@ const Register = () => {
                                     label="Пароль"
                                     type="password"
                                     id="password"
-                                    autoComplete="current-password"
+                                    autoComplete="new-password"
                                     value={form.password}
                                     onChange={handleChange}
                                     error={Boolean(errors.password)}
@@ -363,6 +396,7 @@ const Register = () => {
                                     label="Курс"
                                     name="course"
                                     autoComplete="course"
+                                    type="number"
                                     value={form.course}
                                     onChange={handleChange}
                                     placeholder="Введите ваш курс"
@@ -394,6 +428,7 @@ const Register = () => {
                                     label="Номер зачетной книжки"
                                     name="recordBookNumber"
                                     autoComplete="recordBookNumber"
+                                    type="number"
                                     value={form.recordBookNumber}
                                     onChange={handleChange}
                                     placeholder="Введите номер вашей зачетной книжки"
@@ -490,8 +525,9 @@ const Register = () => {
                             type="submit"
                             fullWidth
                             variant="contained"
+                            disabled={isSubmitting}
                         >
-                            Зарегистрироваться
+                            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Зарегистрироваться'}
                         </StyledButton>
                     </Box>
                     <Typography variant="body1" sx={{ mt: 4, color: '#555' }}>
@@ -507,6 +543,7 @@ const Register = () => {
             </FormContainer>
         </RegisterWrapper>
     );
+
 };
 
 export default Register;

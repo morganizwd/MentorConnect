@@ -45,6 +45,19 @@ export const updateUser = createAsyncThunk('user/updateUser', async ({ id, formD
     return data;
 });
 
+export const deleteAvatar = createAsyncThunk('user/deleteAvatar', async (userId, { rejectWithValue }) => {
+    try {
+        const { data } = await axios.delete(`/users/${userId}/avatar`);
+        return data;
+    } catch (err) {
+        if (err.response && err.response.data && err.response.data.message) {
+            return rejectWithValue(err.response.data.message);
+        } else {
+            return rejectWithValue(err.message);
+        }
+    }
+});
+
 const initialState = {
     data: null,
     status: 'loading',
@@ -133,6 +146,17 @@ const userSlice = createSlice({
             })
             .addCase(updateUser.fulfilled, (state, action) => {
                 state.data = action.payload;
+            })
+            .addCase(deleteAvatar.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(deleteAvatar.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.data.avatar = null; // Удаляем аватар из состояния
+            })
+            .addCase(deleteAvatar.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
             });
     },
 });

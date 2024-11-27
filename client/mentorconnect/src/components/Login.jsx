@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+// src/components/Login.jsx
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchAuth } from '../redux/slices/userSlice';
-import { TextField, Button, Typography, Alert, Box, Link } from '@mui/material';
+import { TextField, Button, Typography, Alert, Box, Link, CircularProgress } from '@mui/material';
 import { styled } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
 import loginIllustration from '../assets/loginIllustration.png'; // Добавьте вашу иллюстрацию
 import decorative1 from '../assets/decorative1.png'; // Дополнительная декоративная иллюстрация
 import decorative2 from '../assets/decorative2.png'; // Дополнительная декоративная иллюстрация
+import { loginSchema } from '../validation/loginValidation'; // Импортируем схему валидации
 
 // Styled Components
 
@@ -93,36 +95,69 @@ const Login = () => {
     password: '',
   });
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState({ text: '', severity: 'info' });
+  const [isSubmitting, setIsSubmitting] = useState(false); // Состояние загрузки
 
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
+    // Очистка ошибки для поля при изменении
+    setErrors({
+      ...errors,
+      [e.target.name]: '',
+    });
+    // Очистка общего сообщения
+    setMessage({ text: '', severity: 'info' });
   };
 
   const validateForm = () => {
+    const { error } = loginSchema.validate(form, { abortEarly: false });
+    if (!error) {
+      setErrors({});
+      return true;
+    }
     const newErrors = {};
-    if (!form.email) newErrors.email = 'Email обязателен';
-    if (!form.password) newErrors.password = 'Пароль обязателен';
+    error.details.forEach((detail) => {
+      newErrors[detail.path[0]] = detail.message;
+    });
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return false;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    setIsSubmitting(true); // Начало отправки
+
     try {
       const resultAction = await dispatch(fetchAuth(form)).unwrap();
-      setMessage('Вход выполнен успешно');
+      setMessage({ text: 'Вход выполнен успешно', severity: 'success' });
       localStorage.setItem('token', resultAction.token); // Сохранение токена в localStorage
       navigate('/'); // Перенаправление на главную страницу после успешного входа
     } catch (err) {
-      setMessage('Ошибка входа: ' + err.message);
+      // Обработка ошибок от сервера
+      if (err.response && err.response.data && err.response.data.message) {
+        setMessage({ text: `Ошибка входа: ${err.response.data.message}`, severity: 'error' });
+      } else {
+        setMessage({ text: `Ошибка входа: ${err.message}`, severity: 'error' });
+      }
+    } finally {
+      setIsSubmitting(false); // Завершение отправки
     }
   };
+
+  // Автоматическое скрытие сообщений через 5 секунд
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => {
+        setMessage({ text: '', severity: 'info' });
+      }, 5000); // Скрыть через 5 секунд
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   return (
     <LoginWrapper>
@@ -135,7 +170,7 @@ const Login = () => {
           <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: '700', color: '#333', fontSize: '2rem' }}>
             Вход
           </Typography>
-          {message && <Alert severity="info" sx={{ mb: 4, fontSize: '1rem' }}>{message}</Alert>}
+          {message.text && <Alert severity={message.severity} sx={{ mb: 4, fontSize: '1rem' }}>{message.text}</Alert>}
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
               margin="normal"
@@ -189,8 +224,9 @@ const Login = () => {
               type="submit"
               fullWidth
               variant="contained"
+              disabled={isSubmitting}
             >
-              Войти
+              {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Войти'}
             </StyledButton>
           </Box>
           <Typography variant="body1" sx={{ mt: 4, color: '#555' }}>
@@ -206,6 +242,7 @@ const Login = () => {
       </FormContainer>
     </LoginWrapper>
   );
+
 };
 
 export default Login;

@@ -129,7 +129,40 @@ const userController = {
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
-    }
+    },
+
+    deleteAvatar: async (req, res) => {
+        try {
+            const userId = req.params.id;
+
+            // Проверяем, существует ли пользователь
+            const user = await User.findByPk(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'Пользователь не найден' });
+            }
+
+            // Проверяем, имеет ли пользователь аватар
+            if (!user.avatar) {
+                return res.status(400).json({ message: 'Аватар отсутствует' });
+            }
+
+            // Путь к файлу аватара
+            const avatarPath = path.join(__dirname, '..', user.avatar);
+
+            // Удаляем файл аватара, если он существует
+            if (fs.existsSync(avatarPath)) {
+                fs.unlinkSync(avatarPath);
+            }
+
+            // Обновляем запись пользователя, удаляя ссылку на аватар
+            user.avatar = null;
+            await user.save();
+
+            res.json({ message: 'Аватар успешно удален' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
 };
 
 module.exports = userController;
