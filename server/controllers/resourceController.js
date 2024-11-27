@@ -108,12 +108,18 @@ const resourceController = {
         try {
             const resource = await Resource.findByPk(req.params.id);
             if (resource) {
-                const originalExtension = path.extname(resource.filePath); // Extract file extension
-                const safeFilename = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // Safe filename
-                const finalFilename = `${safeFilename}${originalExtension}`; // Append extension
+                const originalExtension = path.extname(resource.filePath); // e.g., ".docx"
+                const originalName = path.basename(resource.filePath); // e.g., "uniqueid-document.docx"
+
+                // Если хотите использовать оригинальное имя файла
+                const finalFilename = originalName;
+
+                // Или, если хотите использовать заголовок с расширением
+                // const safeFilename = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                // const finalFilename = `${safeFilename}${originalExtension}`;
 
                 res.setHeader('Content-Type', resource.fileType);
-                res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"`); // Properly set content-disposition
+                res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"; filename*=UTF-8''${encodeURIComponent(finalFilename)}`);
                 res.sendFile(path.resolve(resource.filePath));
             } else {
                 res.status(404).json({ message: 'Resource not found' });

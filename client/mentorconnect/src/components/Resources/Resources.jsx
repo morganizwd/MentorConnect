@@ -159,13 +159,33 @@ const Resources = () => {
                 responseType: 'blob',
             });
 
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            // Извлечение заголовка Content-Disposition
+            const disposition = response.headers['content-disposition'];
+            console.log('Content-Disposition:', disposition); // Отладка
+            let filename = 'file'; // Значение по умолчанию
+
+            if (disposition && disposition.includes('attachment')) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            } else {
+                // Если заголовок отсутствует, можно использовать title и добавить расширение
+                filename = `${title}`;
+            }
+
+            console.log('Extracted filename:', filename); // Отладка
+
+            const blob = new Blob([response.data], { type: response.data.type });
+            const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', title || 'file');
+            link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
             link.remove();
+            window.URL.revokeObjectURL(url); // Освобождение памяти
         } catch (err) {
             console.error('Error downloading file', err);
         }
@@ -227,6 +247,7 @@ const Resources = () => {
                             onChange={handleFormChange}
                             helperText="Введите название ресурса (обязательно)."
                             sx={{ marginBottom: 2 }}
+                            required
                         />
                         <TextField
                             label="Описание"
@@ -362,6 +383,7 @@ const Resources = () => {
             </StyledContainer>
         </PageWrapper>
     );
+
 };
 
 export default Resources;
