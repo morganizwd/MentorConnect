@@ -9,8 +9,8 @@ const userSchema = Joi.object({
     role: Joi.string().valid('mentee', 'mentor', 'admin').required(),
     course: Joi.number().integer().min(1).max(10).allow(null),
     recordBookNumber: Joi.number().integer().allow(null),
-    facultyId: Joi.number().integer().required(),
-    specializationId: Joi.number().integer().required(),
+    facultyId: Joi.number().integer().required().allow(null),
+    specializationId: Joi.number().integer().required().allow(null),
 });
 
 const resourceSchema = Joi.object({

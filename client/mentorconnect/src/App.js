@@ -36,9 +36,9 @@ const App = () => {
 
   return (
     <Router>
-      <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         <Menu />
-        <div style={{ flex: 1, padding: 20 }}>
+        <div style={{ padding: 20 }}>
           <Routes>
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />

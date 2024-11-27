@@ -10,8 +10,8 @@ const User = sequelize.define('user', {
     role: { type: DataTypes.STRING, defaultValue: "MENTEE" },
     course: { type: DataTypes.SMALLINT, allowNull: true },
     recordBookNumber: { type: DataTypes.INTEGER, unique: true, allowNull: true },
-    facultyId: { type: DataTypes.INTEGER },
-    specializationId: { type: DataTypes.INTEGER },
+    facultyId: { type: DataTypes.INTEGER, allowNull: true},
+    specializationId: { type: DataTypes.INTEGER, allowNull: true },
     avatar: { type: DataTypes.STRING, allowNull: true }, // Поле для аватара
 });
 

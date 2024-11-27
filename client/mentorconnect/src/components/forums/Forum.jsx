@@ -8,19 +8,78 @@ import {
     Container,
     Typography,
     List,
-    ListItem,
-    ListItemText,
     TextField,
     Button,
     Box,
     Avatar,
-    ListItemAvatar,
     Pagination,
-    MenuItem,
-    Select,
+    Grid,
+    Card,
+    CardHeader,
+    CardContent,
     FormControl,
     InputLabel,
+    Select,
+    MenuItem,
 } from '@mui/material';
+import { styled } from '@mui/system';
+import { Send as SendIcon } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Styled Components
+const PageWrapper = styled(Box)(({ theme }) => ({
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #ff9a8b 0%, #ff6a88 50%, #ff99ac 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: theme.spacing(4),
+    overflowX: 'hidden',
+}));
+
+const StyledContainer = styled(Container)(({ theme }) => ({
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: theme.spacing(6),
+    borderRadius: theme.spacing(2),
+    boxShadow: '0px 10px 30px rgba(0,0,0,0.1)',
+    backdropFilter: 'blur(10px)',
+    maxWidth: '1100px',
+}));
+
+const HeaderSection = styled(Box)(({ theme }) => ({
+    textAlign: 'center',
+    marginBottom: theme.spacing(4),
+}));
+
+const StyledCard = styled(Card)(({ theme }) => ({
+    margin: theme.spacing(2, 0),
+    borderRadius: theme.spacing(2),
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+    '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+    },
+}));
+
+const MotionCard = motion(StyledCard);
+
+const StyledButton = styled(Button)(({ theme }) => ({
+    marginTop: theme.spacing(2),
+    padding: theme.spacing(1.5, 6),
+    backgroundColor: '#ff4081',
+    color: '#fff',
+    fontWeight: 600,
+    fontSize: '1.2rem',
+    borderRadius: theme.spacing(2),
+    boxShadow: '0 8px 24px rgba(255, 64, 129, 0.4)',
+    transition: 'transform 0.3s, box-shadow 0.3s',
+    '&:hover': {
+        backgroundColor: '#e91e63',
+        transform: 'translateY(-3px)',
+        boxShadow: '0 10px 30px rgba(233, 30, 99, 0.5)',
+    },
+}));
 
 const Forum = () => {
     const { id } = useParams();
@@ -28,6 +87,7 @@ const Forum = () => {
     const forum = useSelector((state) => state.forums.currentForum);
     const posts = useSelector((state) => state.posts.posts);
     const users = useSelector((state) => state.user.users);
+
     const [newPost, setNewPost] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [postsPerPage, setPostsPerPage] = useState(5);
@@ -38,12 +98,12 @@ const Forum = () => {
     }, [dispatch, id]);
 
     useEffect(() => {
-        posts.forEach(post => {
-            if (!users.find(user => user.id === post.authorId)) {
+        posts.forEach((post) => {
+            if (!users.find((user) => user.id === post.authorId)) {
                 dispatch(fetchUserById(post.authorId));
             }
         });
-    }, [posts, dispatch, users]);
+    }, [posts, users, dispatch]);
 
     const handleCreatePost = () => {
         if (newPost.trim()) {
@@ -58,7 +118,6 @@ const Forum = () => {
 
     const handlePostsPerPageChange = (event) => {
         setPostsPerPage(event.target.value);
-        setCurrentPage(1); // Reset to the first page when posts per page changes
     };
 
     const sortedPosts = posts
@@ -69,74 +128,99 @@ const Forum = () => {
     const indexOfFirstPost = indexOfLastPost - postsPerPage;
     const currentPosts = sortedPosts.slice(indexOfFirstPost, indexOfLastPost);
 
-    const apiUrl = 'http://localhost:7000';
+    const listVariants = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0 },
+    };
 
     return (
-        <Container>
-            {forum && (
-                <>
-                    <Typography variant="h4" gutterBottom>
-                        {forum.title}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                        {forum.description}
-                    </Typography>
-                    <Box>
-                        <TextField
-                            fullWidth
-                            label="New Post"
-                            multiline
-                            rows={4}
-                            value={newPost}
-                            onChange={(e) => setNewPost(e.target.value)}
-                            sx={{ mb: 2 }}
-                        />
-                        <Button variant="contained" onClick={handleCreatePost}>
-                            Add Post
-                        </Button>
-                    </Box>
-                    <FormControl fullWidth margin="normal" sx={{ mt: 2 }}>
-                        <InputLabel id="posts-per-page-label">Posts Per Page</InputLabel>
-                        <Select
-                            labelId="posts-per-page-label"
-                            id="posts-per-page"
-                            value={postsPerPage}
-                            onChange={handlePostsPerPageChange}
-                            label="Posts Per Page"
-                        >
-                            <MenuItem value={5}>5</MenuItem>
-                            <MenuItem value={10}>10</MenuItem>
-                            <MenuItem value={15}>15</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <List>
-                        {currentPosts.map((post) => {
-                            const author = users.find(user => user.id === post.authorId);
-                            return (
-                                <ListItem key={post.id}>
-                                    <ListItemAvatar>
-                                        <Avatar
-                                            src={author && author.avatar ? `${apiUrl}${author.avatar}` : ''}
-                                            alt={author ? `${author.firstName} ${author.lastName}` : 'Author'}
-                                        />
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={post.content}
-                                        secondary={`By ${author ? `${author.firstName} ${author.lastName}` : `Author ID: ${post.authorId}`} on ${new Date(post.createdAt).toLocaleString()}`}
+        <PageWrapper>
+            <StyledContainer>
+                {forum && (
+                    <>
+                        {/* Заголовок */}
+                        <HeaderSection>
+                            <Typography variant="h3" sx={{ fontWeight: '700', color: '#333' }}>
+                                {forum.title}
+                            </Typography>
+                            <Typography variant="h6" sx={{ color: '#555' }}>
+                                {forum.description}
+                            </Typography>
+                        </HeaderSection>
+
+                        {/* Создание нового поста */}
+                        <Box sx={{ marginBottom: 4 }}>
+                            <Typography variant="h5" gutterBottom>
+                                Добавить Пост
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} md={9}>
+                                    <TextField
+                                        label="Ваш текст"
+                                        multiline
+                                        rows={4}
+                                        value={newPost}
+                                        onChange={(e) => setNewPost(e.target.value)}
+                                        fullWidth
+                                        variant="outlined"
                                     />
-                                </ListItem>
-                            );
-                        })}
-                    </List>
-                    <Pagination
-                        count={Math.ceil(sortedPosts.length / postsPerPage)}
-                        page={currentPage}
-                        onChange={handlePageChange}
-                        sx={{ mt: 2 }}
-                    />
-                </>
-            )}
-        </Container>
+                                </Grid>
+                                <Grid item xs={12} md={3}>
+                                    <StyledButton
+                                        startIcon={<SendIcon />}
+                                        onClick={handleCreatePost}
+                                        fullWidth
+                                    >
+                                        Отправить
+                                    </StyledButton>
+                                </Grid>
+                            </Grid>
+                        </Box>
+
+                        {/* Список постов */}
+                        <AnimatePresence>
+                            {currentPosts.map((post) => {
+                                const author = users.find((user) => user.id === post.authorId);
+                                return (
+                                    <MotionCard
+                                        key={post.id}
+                                        variants={listVariants}
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="hidden"
+                                        transition={{ duration: 0.4 }}
+                                    >
+                                        <CardHeader
+                                            avatar={
+                                                <Avatar
+                                                    src={author ? author.avatar : ''}
+                                                    alt={author ? author.firstName : 'Автор'}
+                                                />
+                                            }
+                                            title={author ? `${author.firstName} ${author.lastName}` : `Автор ID: ${post.authorId}`}
+                                            subheader={new Date(post.createdAt).toLocaleString()}
+                                        />
+                                        <CardContent>
+                                            <Typography>{post.content}</Typography>
+                                        </CardContent>
+                                    </MotionCard>
+                                );
+                            })}
+                        </AnimatePresence>
+
+                        {/* Пагинация */}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                            <Pagination
+                                count={Math.ceil(sortedPosts.length / postsPerPage)}
+                                page={currentPage}
+                                onChange={handlePageChange}
+                                color="primary"
+                            />
+                        </Box>
+                    </>
+                )}
+            </StyledContainer>
+        </PageWrapper>
     );
 };
 

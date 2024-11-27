@@ -12,14 +12,86 @@ import {
     TextField,
     Button,
     Box,
-    List,
-    ListItem,
-    ListItemText,
+    Grid,
+    Card,
+    CardContent,
+    CardActions,
     IconButton,
-    ListItemSecondaryAction,
+    InputAdornment,
+    CircularProgress,
+    Stack,
 } from '@mui/material';
-import { Delete as DeleteIcon, GetApp as GetAppIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, GetApp as GetAppIcon, Upload as UploadIcon, Search as SearchIcon, Info as InfoIcon } from '@mui/icons-material';
+import { styled, keyframes } from '@mui/system';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from '../../redux/axios';
+
+// Keyframes for animated background
+const gradientAnimation = keyframes`
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+`;
+
+// Styled Components
+const PageWrapper = styled(Box)(({ theme }) => ({
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #ff9a8b, #fcb69f, #84fab0, #8fd3f4)',
+    backgroundSize: '400% 400%',
+    animation: `${gradientAnimation} 10s ease infinite`,
+    padding: theme.spacing(4),
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+}));
+
+const StyledContainer = styled(Container)(({ theme }) => ({
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    padding: theme.spacing(4),
+    borderRadius: theme.spacing(3),
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    backdropFilter: 'blur(15px)',
+    maxWidth: '900px',
+    textAlign: 'center',
+}));
+
+const WelcomeBox = styled(Box)(({ theme }) => ({
+    backgroundColor: 'rgba(63, 81, 181, 0.1)',
+    padding: theme.spacing(3),
+    borderRadius: theme.spacing(2),
+    marginBottom: theme.spacing(4),
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+}));
+
+const StyledCard = styled(Card)(({ theme }) => ({
+    marginBottom: theme.spacing(2),
+    borderRadius: theme.spacing(2),
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    transform: 'perspective(1000px) rotateX(0deg)',
+    transition: 'transform 0.4s ease, box-shadow 0.3s ease-in-out',
+    '&:hover': {
+        transform: 'perspective(1000px) rotateX(3deg)',
+        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+    },
+}));
+
+const StyledButton = styled(Button)(({ theme }) => ({
+    padding: theme.spacing(1.5, 4),
+    backgroundColor: '#3f51b5',
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: '1.1rem',
+    borderRadius: theme.spacing(2),
+    boxShadow: '0 6px 18px rgba(63, 81, 181, 0.4)',
+    transition: 'transform 0.3s, box-shadow 0.3s',
+    '&:hover': {
+        backgroundColor: '#303f9f',
+        transform: 'translateY(-3px)',
+        boxShadow: '0 8px 24px rgba(48, 63, 159, 0.5)',
+    },
+}));
+
+const MotionCard = motion(StyledCard);
 
 const Resources = () => {
     const dispatch = useDispatch();
@@ -86,12 +158,11 @@ const Resources = () => {
             const response = await axios.get(`/resources/${id}/download`, {
                 responseType: 'blob',
             });
+
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
-            const contentDisposition = response.headers['content-disposition'];
-            const fileName = contentDisposition ? contentDisposition.split('filename=')[1].replace(/['"]/g, '') : title;
             link.href = url;
-            link.setAttribute('download', fileName);
+            link.setAttribute('download', title || 'file');
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -116,122 +187,180 @@ const Resources = () => {
     };
 
     return (
-        <Container>
-            <Typography variant="h4" gutterBottom>
-                Resources
-            </Typography>
-            {isAuth && (
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-                    <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        id="title"
-                        label="Title"
-                        name="title"
-                        autoComplete="title"
-                        autoFocus
-                        value={form.title}
-                        onChange={handleFormChange}
-                    />
-                    <TextField
-                        margin="normal"
-                        fullWidth
-                        id="description"
-                        label="Description"
-                        name="description"
-                        autoComplete="description"
-                        value={form.description}
-                        onChange={handleFormChange}
-                    />
-                    <input
-                        accept="*"
-                        style={{ display: 'none' }}
-                        id="file"
-                        type="file"
-                        name="file"
-                        onChange={handleFormChange}
-                    />
-                    <label htmlFor="file">
-                        <Button variant="contained" component="span">
-                            {form.file ? form.file.name : 'Upload File'}
-                        </Button>
-                    </label>
-                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-                        Create Resource
-                    </Button>
-                </Box>
-            )}
-            <Box sx={{ mt: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                    Filters
-                </Typography>
-                <TextField
-                    margin="normal"
-                    fullWidth
-                    id="filter-title"
-                    label="Filter by Title"
-                    name="title"
-                    value={filters.title}
-                    onChange={handleFilterChange}
-                />
-                <TextField
-                    margin="normal"
-                    fullWidth
-                    id="startDate"
-                    label="Filter by Start Date"
-                    name="startDate"
-                    type="date"
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                    value={filters.startDate}
-                    onChange={handleFilterChange}
-                />
-                <TextField
-                    margin="normal"
-                    fullWidth
-                    id="endDate"
-                    label="Filter by End Date"
-                    name="endDate"
-                    type="date"
-                    InputLabelProps={{
-                        shrink: true,
-                    }}
-                    value={filters.endDate}
-                    onChange={handleFilterChange}
-                />
-            </Box>
-            {status === 'loading' && <p>Loading...</p>}
-            {error && <p>Error: {error}</p>}
-            <List>
-                {filterResources().map((resource) => (
-                    <ListItem key={resource.id}>
-                        <ListItemText
-                            primary={resource.title}
-                            secondary={
-                                <>
-                                    <div>Description: {resource.description}</div>
-                                    <div>Author: {getAuthorNameById(resource.userId)}</div>
-                                    <div>Created At: {new Date(resource.createdAt).toLocaleString()}</div>
-                                    <div>Updated At: {new Date(resource.updatedAt).toLocaleString()}</div>
-                                </>
-                            }
+        <PageWrapper>
+            <StyledContainer>
+                {/* Приветственный Блок */}
+                <WelcomeBox>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                        <InfoIcon color="primary" fontSize="large" />
+                        <Typography variant="h5" component="div">
+                            Добро пожаловать в раздел ресурсов!
+                        </Typography>
+                    </Stack>
+                    <Box sx={{ mt: 2 }}>
+                        <Typography variant="body1" gutterBottom>
+                            Здесь вы можете добавлять, просматривать и скачивать полезные материалы.
+                        </Typography>
+                        {isAuth && (
+                            <Typography variant="body1" gutterBottom>
+                                Если вы являетесь авторизованным пользователем, у вас есть возможность добавлять новые ресурсы или удалять существующие.
+                            </Typography>
+                        )}
+                        <Typography variant="body1" gutterBottom>
+                            Используйте фильтры ниже, чтобы быстро находить нужные материалы по названию или дате создания.
+                        </Typography>
+                    </Box>
+                </WelcomeBox>
+
+                {/* Форма Добавления Ресурса */}
+                {isAuth && (
+                    <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Добавьте новый ресурс
+                        </Typography>
+                        <TextField
+                            label="Название"
+                            name="title"
+                            fullWidth
+                            variant="outlined"
+                            value={form.title}
+                            onChange={handleFormChange}
+                            helperText="Введите название ресурса (обязательно)."
+                            sx={{ marginBottom: 2 }}
                         />
-                        <ListItemSecondaryAction>
-                            <IconButton edge="end" aria-label="download" onClick={() => handleDownload(resource.id, resource.title)}>
-                                <GetAppIcon />
-                            </IconButton>
-                            {isAuth && (
-                                <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(resource.id)}>
-                                    <DeleteIcon />
-                                </IconButton>
+                        <TextField
+                            label="Описание"
+                            name="description"
+                            fullWidth
+                            variant="outlined"
+                            value={form.description}
+                            onChange={handleFormChange}
+                            helperText="Краткое описание ресурса."
+                            sx={{ marginBottom: 2 }}
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
+                            <input
+                                accept="*"
+                                style={{ display: 'none' }}
+                                id="file-upload"
+                                type="file"
+                                name="file"
+                                onChange={handleFormChange}
+                            />
+                            <label htmlFor="file-upload">
+                                <StyledButton variant="contained" component="span" startIcon={<UploadIcon />}>
+                                    {form.file ? form.file.name : 'Загрузить файл'}
+                                </StyledButton>
+                            </label>
+                            {form.file && (
+                                <Typography variant="body2" sx={{ ml: 2 }}>
+                                    {form.file.name}
+                                </Typography>
                             )}
-                        </ListItemSecondaryAction>
-                    </ListItem>
-                ))}
-            </List>
-        </Container>
+                        </Box>
+                        <StyledButton type="submit" sx={{ ml: 2 }}>
+                            Добавить ресурс
+                        </StyledButton>
+                    </Box>
+                )}
+
+                {/* Блок Фильтров */}
+                <Box sx={{ mt: 6 }}>
+                    <Typography variant="h6" gutterBottom>
+                        Фильтры
+                    </Typography>
+                    <TextField
+                        label="Поиск по названию"
+                        name="title"
+                        fullWidth
+                        variant="outlined"
+                        value={filters.title}
+                        onChange={handleFilterChange}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            ),
+                        }}
+                        helperText="Введите ключевые слова для поиска по названию."
+                        sx={{ marginBottom: 2 }}
+                    />
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                label="Дата начала"
+                                name="startDate"
+                                type="date"
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                                value={filters.startDate}
+                                onChange={handleFilterChange}
+                                helperText="Выберите дату начала поиска."
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                label="Дата окончания"
+                                name="endDate"
+                                type="date"
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                                value={filters.endDate}
+                                onChange={handleFilterChange}
+                                helperText="Выберите дату окончания поиска."
+                            />
+                        </Grid>
+                    </Grid>
+                </Box>
+
+                {/* Список Ресурсов */}
+                <AnimatePresence>
+                    {status === 'loading' ? (
+                        <Box sx={{ textAlign: 'center', mt: 4 }}>
+                            <CircularProgress />
+                        </Box>
+                    ) : (
+                        filterResources().map((resource) => (
+                            <MotionCard
+                                key={resource.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -30 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <CardContent>
+                                    <Typography variant="h5">{resource.title}</Typography>
+                                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                                        {resource.description}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                                        Автор: {getAuthorNameById(resource.userId)}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                                        Дата создания: {new Date(resource.createdAt).toLocaleString()}
+                                    </Typography>
+                                </CardContent>
+                                <CardActions>
+                                    <Button
+                                        color="primary"
+                                        startIcon={<GetAppIcon />}
+                                        onClick={() => handleDownload(resource.id, resource.title)}
+                                    >
+                                        Скачать
+                                    </Button>
+                                    {isAuth && (
+                                        <IconButton edge="end" color="secondary" onClick={() => handleDelete(resource.id)}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    )}
+                                </CardActions>
+                            </MotionCard>
+                        ))
+                    )}
+                </AnimatePresence>
+            </StyledContainer>
+        </PageWrapper>
     );
 };
 

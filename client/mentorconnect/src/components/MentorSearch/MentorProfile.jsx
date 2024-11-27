@@ -12,20 +12,81 @@ import {
     Container,
     Typography,
     Avatar,
-    List,
-    ListItem,
-    ListItemText,
     Box,
     Paper,
+    Button,
     Dialog,
     DialogContent,
-    Button,
     TextField,
     DialogActions,
     DialogTitle,
     DialogContentText,
     Rating,
+    Chip,
+    Grid,
 } from '@mui/material';
+import { styled } from '@mui/system';
+import { motion } from 'framer-motion';
+import { Email, School, Tag, ContactPhone, Comment, Event } from '@mui/icons-material';
+
+const GradientBackground = styled(Box)(({ theme }) => ({
+    background: 'linear-gradient(135deg, #FF9A8B, #FAD961, #9CECFB, #92FE9D)',
+    backgroundSize: '400% 400%',
+    animation: 'gradientAnimation 15s ease infinite',
+    minHeight: '100vh',
+    padding: theme.spacing(4),
+    '@keyframes gradientAnimation': {
+        '0%': { backgroundPosition: '0% 50%' },
+        '50%': { backgroundPosition: '100% 50%' },
+        '100%': { backgroundPosition: '0% 50%' },
+    },
+}));
+
+const StyledPaper = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(4),
+    borderRadius: theme.spacing(3),
+    background: 'rgba(255, 255, 255, 0.9)',
+    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.3)',
+    backdropFilter: 'blur(10px)',
+    color: '#333',
+    marginBottom: theme.spacing(3),
+}));
+
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+    width: 150,
+    height: 150,
+    border: '5px solid #fff',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
+    cursor: 'pointer',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    '&:hover': {
+        transform: 'scale(1.1)',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5)',
+    },
+}));
+
+const InfoCard = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(2),
+    borderRadius: theme.spacing(2),
+    background: 'rgba(250, 250, 250, 0.9)',
+    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+    marginBottom: theme.spacing(2),
+}));
+
+const GradientButton = styled(Button)(({ theme }) => ({
+    padding: theme.spacing(1, 4),
+    borderRadius: theme.spacing(3),
+    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+    color: '#fff',
+    fontWeight: 'bold',
+    boxShadow: '0 6px 20px rgba(118, 75, 162, 0.5)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #764ba2, #667eea)',
+        transform: 'translateY(-3px)',
+        boxShadow: '0 10px 30px rgba(118, 75, 162, 0.7)',
+    },
+}));
 
 const MentorProfile = () => {
     const { id } = useParams();
@@ -40,216 +101,105 @@ const MentorProfile = () => {
     const mentorReviews = useSelector((state) => state.mentorReviews.reviews);
 
     const [openDialog, setOpenDialog] = useState(false);
-    const [openSessionDialog, setOpenSessionDialog] = useState(false);
-    const [sessionData, setSessionData] = useState({
-        scheduledTime: '',
-        isFinished: false,
-        mentorId: parseInt(id),
-        menteeId: null
-    });
 
     useEffect(() => {
         dispatch(fetchUserById(id));
         dispatch(fetchFaculties());
         dispatch(fetchSpecializations());
-        dispatch(fetchTagsByUserId(id)); // Fetch tags for the user
-        dispatch(fetchContactsByUserId(id)); // Fetch contacts for the user
+        dispatch(fetchTagsByUserId(id));
+        dispatch(fetchContactsByUserId(id));
         dispatch(fetchMentorshipSessions());
         dispatch(fetchMentorReviews());
     }, [dispatch, id]);
 
-    useEffect(() => {
-        if (currentUser) {
-            setSessionData(prevState => ({ ...prevState, menteeId: currentUser.id }));
-        }
-    }, [currentUser]);
-
-    const apiUrl = 'http://localhost:7000'; // Ensure your API URL is correct
-
-    if (!user) {
-        return <Typography variant="h6">Loading...</Typography>;
-    }
-
     const facultyName = faculties.find(faculty => faculty.id === user.facultyId)?.name || 'Unknown Faculty';
-    const specializationName = specializations.find(specialization => specialization.id === user.specializationId)?.name || 'Unknown Specialization';
-
+    const specializationName = specializations.find(spec => spec.id === user.specializationId)?.name || 'Unknown Specialization';
     const completedSessionsCount = sessions.filter(session => session.mentorId === parseInt(id) && session.isFinished).length;
 
-    // Filter reviews where the session's mentorId matches the user's id
-    const mentorRelatedReviews = mentorReviews.filter(review => {
-        const session = sessions.find(session => session.id === review.mentorshipSessionId);
-        return session && session.mentorId === parseInt(id);
-    });
-
-    const renderContactField = (label, value) => {
-        if (!value || value === 'N/A') return null;
-        const isLink = value.startsWith('http') || value.startsWith('https');
-        return (
-            <Typography variant="body2" gutterBottom>
-                {label}: {isLink ? <a href={value} target="_blank" rel="noopener noreferrer">{value}</a> : value}
-            </Typography>
-        );
+    const renderContacts = () => {
+        return contacts.map(contact => (
+            <Chip
+                icon={<ContactPhone />}
+                key={contact.id}
+                label={contact.phoneNumber || 'Contact'}
+                color="primary"
+                sx={{ marginRight: 1, marginBottom: 1 }}
+            />
+        ));
     };
 
-    const renderContacts = (userId) => {
-        const userContacts = contacts.filter(contact => contact.userId === userId);
-        return userContacts.length > 0 ? (
-            userContacts.map(contact => (
-                <Box key={contact.id} sx={{ marginBottom: 1 }}>
-                    {contact.vk && <Typography variant="body2">VK: <a href={contact.vk} target="_blank" rel="noopener noreferrer">{contact.vk}</a></Typography>}
-                    {contact.telegram && <Typography variant="body2">Telegram: <a href={contact.telegram} target="_blank" rel="noopener noreferrer">{contact.telegram}</a></Typography>}
-                    {contact.phoneNumber && <Typography variant="body2">Phone: {contact.phoneNumber}</Typography>}
-                </Box>
-            ))
-        ) : <Typography variant="body2">No contacts available</Typography>;
-    };
-
-    const renderReviews = () => {
-        return (
-            <Box sx={{ marginTop: 2 }}>
-                <Typography variant="h6">Reviews:</Typography>
-                {mentorRelatedReviews.length > 0 ? (
-                    mentorRelatedReviews.map(review => (
-                        <Paper key={review.id} sx={{ padding: 2, marginBottom: 2 }}>
-                            <Typography variant="body2">Comment: {review.comment}</Typography>
-                            <Rating value={review.rating} readOnly />
-                        </Paper>
-                    ))
-                ) : (
-                    <Typography variant="body2">No reviews available</Typography>
-                )}
-            </Box>
-        );
-    };
-
-    const handleAvatarClick = () => {
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
-
-    const handleOpenSessionDialog = () => {
-        setOpenSessionDialog(true);
-    };
-
-    const handleCloseSessionDialog = () => {
-        setOpenSessionDialog(false);
-    };
-
-    const handleSessionChange = (e) => {
-        const { name, value } = e.target;
-        setSessionData({ ...sessionData, [name]: value });
-    };
-
-    const handleCreateSession = () => {
-        dispatch(createMentorshipSession(sessionData)).then(() => {
-            setOpenSessionDialog(false);
-            dispatch(fetchContactsByUserId(id));
-        });
+    const renderTags = () => {
+        return tags.map(tag => (
+            <Chip
+                icon={<Tag />}
+                key={tag.id}
+                label={tag.name}
+                color="secondary"
+                sx={{ marginRight: 1, marginBottom: 1 }}
+            />
+        ));
     };
 
     return (
-        <Container>
-            <Paper elevation={3} sx={{ padding: 3, marginTop: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-                    <Avatar
-                        src={user.avatar ? `${apiUrl}${user.avatar}` : ''}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        sx={{ width: 200, height: 200, cursor: 'pointer' }}
-                        onClick={handleAvatarClick}
+        <GradientBackground>
+            <StyledPaper>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                    <StyledAvatar
+                        src={user?.avatar || ''}
+                        alt={`${user?.firstName} ${user?.lastName}`}
+                        onClick={() => setOpenDialog(true)}
                     />
-                    <Typography variant="h4" gutterBottom>
-                        {`${user.firstName} ${user.lastName}`}
+                    <Typography variant="h4" sx={{ mt: 2, fontWeight: 'bold' }}>
+                        {`${user?.firstName} ${user?.lastName}`}
                     </Typography>
-                    {currentUser && currentUser.role === 'mentee' && (
-                        <Button variant="contained" sx={{ mt: 2 }} onClick={handleOpenSessionDialog}>
-                            Create Session
-                        </Button>
-                    )}
+                    <Typography variant="h6" sx={{ mt: 1, color: 'gray' }}>
+                        {specializationName}, {facultyName}
+                    </Typography>
                 </Box>
-                <Typography variant="h6" gutterBottom>
-                    Email: {user.email}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Course: {user.course}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Record Book Number: {user.recordBookNumber}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Faculty: {facultyName}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Specialization: {specializationName}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Completed Sessions: {completedSessionsCount}
-                </Typography>
-                <Typography variant="h6" gutterBottom>
-                    Tags:
-                </Typography>
-                <List>
-                    {tags && tags.length > 0 ? (
-                        tags.map(tag => (
-                            <ListItem key={tag.id}>
-                                <ListItemText primary={tag.name} />
-                            </ListItem>
-                        ))
-                    ) : (
-                        <Typography variant="body2">No tags available</Typography>
-                    )}
-                </List>
-                <Typography variant="h6" gutterBottom>
-                    Contacts:
-                </Typography>
-                <List>
-                    {renderContacts(user.id)}
-                </List>
-                {renderReviews()}
-            </Paper>
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md">
+            </StyledPaper>
+
+            <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                    <InfoCard>
+                        <Typography variant="h6" gutterBottom>
+                            <Email /> Email
+                        </Typography>
+                        <Typography>{user?.email || 'Not provided'}</Typography>
+                    </InfoCard>
+                    <InfoCard>
+                        <Typography variant="h6" gutterBottom>
+                            <School /> Completed Sessions
+                        </Typography>
+                        <Typography>{completedSessionsCount}</Typography>
+                    </InfoCard>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                    <InfoCard>
+                        <Typography variant="h6" gutterBottom>
+                            <Tag /> Tags
+                        </Typography>
+                        <Box>{renderTags()}</Box>
+                    </InfoCard>
+                    <InfoCard>
+                        <Typography variant="h6" gutterBottom>
+                            <ContactPhone /> Contacts
+                        </Typography>
+                        <Box>{renderContacts()}</Box>
+                    </InfoCard>
+                </Grid>
+            </Grid>
+
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="md">
                 <DialogContent>
                     <img
-                        src={user.avatar ? `${apiUrl}${user.avatar}` : ''}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        style={{ width: '100%', height: 'auto' }}
+                        src={user?.avatar || ''}
+                        alt={`${user?.firstName} ${user?.lastName}`}
+                        style={{ width: '100%', borderRadius: '10px' }}
                     />
                 </DialogContent>
             </Dialog>
-            <Dialog open={openSessionDialog} onClose={handleCloseSessionDialog}>
-                <DialogTitle>Create Mentorship Session</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        To create a new mentorship session, please enter the details below.
-                    </DialogContentText>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="scheduledTime"
-                        label="Scheduled Time"
-                        type="datetime-local"
-                        fullWidth
-                        variant="outlined"
-                        name="scheduledTime"
-                        value={sessionData.scheduledTime}
-                        onChange={handleSessionChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseSessionDialog} color="primary">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleCreateSession} color="primary">
-                        Create
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Container>
+        </GradientBackground>
     );
 };
 

@@ -108,9 +108,12 @@ const resourceController = {
         try {
             const resource = await Resource.findByPk(req.params.id);
             if (resource) {
-                const filename = resource.title.replace(/[^a-z0-9.]/gi, '_').toLowerCase(); // Безопасное имя файла
+                const originalExtension = path.extname(resource.filePath); // Extract file extension
+                const safeFilename = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase(); // Safe filename
+                const finalFilename = `${safeFilename}${originalExtension}`; // Append extension
+
                 res.setHeader('Content-Type', resource.fileType);
-                res.setHeader('Content-Disposition', contentDisposition(filename));
+                res.setHeader('Content-Disposition', `attachment; filename="${finalFilename}"`); // Properly set content-disposition
                 res.sendFile(path.resolve(resource.filePath));
             } else {
                 res.status(404).json({ message: 'Resource not found' });
@@ -119,6 +122,7 @@ const resourceController = {
             res.status(500).json({ message: 'Error downloading the file', error: error.message });
         }
     },
+
 };
 
 module.exports = {
