@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     fetchResources,
@@ -20,8 +20,18 @@ import {
     InputAdornment,
     CircularProgress,
     Stack,
+    Snackbar,
+    Alert,
+    Tabs,
+    Tab,
 } from '@mui/material';
-import { Delete as DeleteIcon, GetApp as GetAppIcon, Upload as UploadIcon, Search as SearchIcon, Info as InfoIcon } from '@mui/icons-material';
+import {
+    Delete as DeleteIcon,
+    GetApp as GetAppIcon,
+    Upload as UploadIcon,
+    Search as SearchIcon,
+    Info as InfoIcon,
+} from '@mui/icons-material';
 import { styled, keyframes } from '@mui/system';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from '../../redux/axios';
@@ -87,7 +97,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
     '&:hover': {
         backgroundColor: '#303f9f',
         transform: 'translateY(-3px)',
-        boxShadow: '0 8px 24px rgba(48, 63, 159, 0.5)',
+        boxShadow: '0 10px 30px rgba(48, 63, 159, 0.5)',
     },
 }));
 
@@ -99,7 +109,7 @@ const Resources = () => {
     const status = useSelector((state) => state.resources.status);
     const error = useSelector((state) => state.resources.error);
     const users = useSelector((state) => state.user.users);
-    const isAuth = useSelector((state) => state.user.data);
+    const currentUser = useSelector((state) => state.user.data); // Предполагается, что здесь содержится текущий пользователь
 
     const [form, setForm] = useState({
         title: '',
@@ -111,6 +121,13 @@ const Resources = () => {
         startDate: '',
         endDate: '',
     });
+
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+
+    // Состояние для вкладок: 0 - Все ресурсы, 1 - Мои ресурсы
+    const [tabValue, setTabValue] = useState(0);
 
     useEffect(() => {
         dispatch(fetchResources());
@@ -140,7 +157,18 @@ const Resources = () => {
             formData.append(key, form[key]);
         }
 
-        dispatch(createResource(formData));
+        dispatch(createResource(formData))
+            .unwrap()
+            .then(() => {
+                setSnackbarMessage('Ресурс успешно добавлен');
+                setSnackbarSeverity('success');
+                setOpenSnackbar(true);
+            })
+            .catch((err) => {
+                setSnackbarMessage('Ошибка при добавлении ресурса');
+                setSnackbarSeverity('error');
+                setOpenSnackbar(true);
+            });
 
         setForm({
             title: '',
@@ -150,7 +178,18 @@ const Resources = () => {
     };
 
     const handleDelete = (id) => {
-        dispatch(deleteResource(id));
+        dispatch(deleteResource(id))
+            .unwrap()
+            .then(() => {
+                setSnackbarMessage('Ресурс успешно удален');
+                setSnackbarSeverity('success');
+                setOpenSnackbar(true);
+            })
+            .catch((err) => {
+                setSnackbarMessage('Ошибка при удалении ресурса');
+                setSnackbarSeverity('error');
+                setOpenSnackbar(true);
+            });
     };
 
     const handleDownload = async (id, title) => {
@@ -188,6 +227,9 @@ const Resources = () => {
             window.URL.revokeObjectURL(url); // Освобождение памяти
         } catch (err) {
             console.error('Error downloading file', err);
+            setSnackbarMessage('Ошибка при скачивании файла');
+            setSnackbarSeverity('error');
+            setOpenSnackbar(true);
         }
     };
 
@@ -196,14 +238,39 @@ const Resources = () => {
         return author ? `${author.firstName} ${author.lastName}` : 'Unknown Author';
     };
 
-    const filterResources = () => {
-        return resources.filter((resource) => {
-            const matchesTitle = filters.title ? resource.title.toLowerCase().includes(filters.title.toLowerCase()) : true;
-            const matchesStartDate = filters.startDate ? new Date(resource.createdAt) >= new Date(filters.startDate) : true;
-            const matchesEndDate = filters.endDate ? new Date(resource.createdAt) <= new Date(filters.endDate) : true;
+    // Мемоизированный отфильтрованный и отсортированный список ресурсов
+    const filteredAndSortedResources = useMemo(() => {
+        let filtered = resources.filter((resource) => {
+            const matchesTitle = filters.title
+                ? resource.title.toLowerCase().includes(filters.title.toLowerCase())
+                : true;
+            const matchesStartDate = filters.startDate
+                ? new Date(resource.createdAt) >= new Date(filters.startDate)
+                : true;
+            const matchesEndDate = filters.endDate
+                ? new Date(resource.createdAt) <= new Date(filters.endDate)
+                : true;
 
             return matchesTitle && matchesStartDate && matchesEndDate;
         });
+
+        // Если выбрана вкладка "Мои ресурсы", фильтруем по текущему пользователю
+        if (tabValue === 1 && currentUser) {
+            filtered = filtered.filter((resource) => resource.userId === currentUser.id);
+        }
+
+        return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Сортировка по убыванию
+    }, [resources, filters, tabValue, currentUser]);
+
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpenSnackbar(false);
+    };
+
+    const handleTabChange = (event, newValue) => {
+        setTabValue(newValue);
     };
 
     return (
@@ -221,9 +288,9 @@ const Resources = () => {
                         <Typography variant="body1" gutterBottom>
                             Здесь вы можете добавлять, просматривать и скачивать полезные материалы.
                         </Typography>
-                        {isAuth && (
+                        {currentUser && (
                             <Typography variant="body1" gutterBottom>
-                                Если вы являетесь авторизованным пользователем, у вас есть возможность добавлять новые ресурсы или удалять существующие.
+                                Если вы являетесь авторизованным пользователем, у вас есть возможность добавлять новые ресурсы или удалять свои собственные.
                             </Typography>
                         )}
                         <Typography variant="body1" gutterBottom>
@@ -232,8 +299,16 @@ const Resources = () => {
                     </Box>
                 </WelcomeBox>
 
+                {/* Вкладки для переключения между Все Ресурсы и Мои Ресурсы */}
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    <Tabs value={tabValue} onChange={handleTabChange} centered>
+                        <Tab label="Все ресурсы" />
+                        <Tab label="Мои ресурсы" />
+                    </Tabs>
+                </Box>
+
                 {/* Форма Добавления Ресурса */}
-                {isAuth && (
+                {currentUser && (
                     <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
                         <Typography variant="h6" gutterBottom>
                             Добавьте новый ресурс
@@ -341,8 +416,8 @@ const Resources = () => {
                         <Box sx={{ textAlign: 'center', mt: 4 }}>
                             <CircularProgress />
                         </Box>
-                    ) : (
-                        filterResources().map((resource) => (
+                    ) : filteredAndSortedResources.length > 0 ? (
+                        filteredAndSortedResources.map((resource) => (
                             <MotionCard
                                 key={resource.id}
                                 initial={{ opacity: 0, y: 30 }}
@@ -370,17 +445,37 @@ const Resources = () => {
                                     >
                                         Скачать
                                     </Button>
-                                    {isAuth && (
-                                        <IconButton edge="end" color="secondary" onClick={() => handleDelete(resource.id)}>
+                                    {currentUser && resource.userId === currentUser.id && (
+                                        <IconButton
+                                            edge="end"
+                                            color="secondary"
+                                            onClick={() => handleDelete(resource.id)}
+                                        >
                                             <DeleteIcon />
                                         </IconButton>
                                     )}
                                 </CardActions>
                             </MotionCard>
                         ))
+                    ) : (
+                        <Typography variant="body1" color="textSecondary" sx={{ mt: 4 }}>
+                            Нет ресурсов для отображения.
+                        </Typography>
                     )}
                 </AnimatePresence>
             </StyledContainer>
+
+            {/* Snackbar для уведомлений */}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </PageWrapper>
     );
 
