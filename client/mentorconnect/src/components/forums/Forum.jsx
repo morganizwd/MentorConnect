@@ -7,7 +7,6 @@ import { fetchUserById } from '../../redux/slices/userSlice';
 import {
     Container,
     Typography,
-    List,
     TextField,
     Button,
     Box,
@@ -17,10 +16,9 @@ import {
     Card,
     CardHeader,
     CardContent,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
+    Chip,
+    Snackbar,
+    Alert,
 } from '@mui/material';
 import { styled } from '@mui/system';
 import { Send as SendIcon } from '@mui/icons-material';
@@ -82,15 +80,21 @@ const StyledButton = styled(Button)(({ theme }) => ({
 }));
 
 const Forum = () => {
+    const apiUrl = 'http://localhost:7000'; // Базовый URL вашего бэкенда
     const { id } = useParams();
     const dispatch = useDispatch();
     const forum = useSelector((state) => state.forums.currentForum);
     const posts = useSelector((state) => state.posts.posts);
     const users = useSelector((state) => state.user.users);
+    const currentUser = useSelector((state) => state.user.data);
 
     const [newPost, setNewPost] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [postsPerPage, setPostsPerPage] = useState(5);
+
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
     useEffect(() => {
         dispatch(fetchForumById(id));
@@ -107,7 +111,18 @@ const Forum = () => {
 
     const handleCreatePost = () => {
         if (newPost.trim()) {
-            dispatch(createPost({ content: newPost, forumId: id }));
+            dispatch(createPost({ content: newPost, forumId: id }))
+                .unwrap()
+                .then(() => {
+                    setSnackbarMessage('Пост успешно создан');
+                    setSnackbarSeverity('success');
+                    setOpenSnackbar(true);
+                })
+                .catch((err) => {
+                    setSnackbarMessage('Ошибка при создании поста');
+                    setSnackbarSeverity('error');
+                    setOpenSnackbar(true);
+                });
             setNewPost('');
         }
     };
@@ -133,10 +148,30 @@ const Forum = () => {
         visible: { opacity: 1, y: 0 },
     };
 
+    const getRoleColor = (role) => {
+        switch (role.toLowerCase()) {
+            case 'admin':
+                return 'error'; // Красный
+            case 'mentor':
+                return 'primary'; // Синий
+            case 'mentee':
+                return 'secondary'; // Фиолетовый
+            default:
+                return 'default'; // Серый
+        }
+    };
+
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpenSnackbar(false);
+    };
+
     return (
         <PageWrapper>
             <StyledContainer>
-                {forum && (
+                {forum ? (
                     <>
                         {/* Заголовок */}
                         <HeaderSection>
@@ -148,34 +183,36 @@ const Forum = () => {
                             </Typography>
                         </HeaderSection>
 
-                        {/* Создание нового поста */}
-                        <Box sx={{ marginBottom: 4 }}>
-                            <Typography variant="h5" gutterBottom>
-                                Добавить Пост
-                            </Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={9}>
-                                    <TextField
-                                        label="Ваш текст"
-                                        multiline
-                                        rows={4}
-                                        value={newPost}
-                                        onChange={(e) => setNewPost(e.target.value)}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
+                        {/* Создание нового поста (доступно только для определенных ролей) */}
+                        {currentUser && (currentUser.role === 'mentor' || currentUser.role === 'mentee') && (
+                            <Box sx={{ marginBottom: 4 }}>
+                                <Typography variant="h5" gutterBottom>
+                                    Добавить Пост
+                                </Typography>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} md={9}>
+                                        <TextField
+                                            label="Ваш текст"
+                                            multiline
+                                            rows={4}
+                                            value={newPost}
+                                            onChange={(e) => setNewPost(e.target.value)}
+                                            fullWidth
+                                            variant="outlined"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <StyledButton
+                                            startIcon={<SendIcon />}
+                                            onClick={handleCreatePost}
+                                            fullWidth
+                                        >
+                                            Отправить
+                                        </StyledButton>
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12} md={3}>
-                                    <StyledButton
-                                        startIcon={<SendIcon />}
-                                        onClick={handleCreatePost}
-                                        fullWidth
-                                    >
-                                        Отправить
-                                    </StyledButton>
-                                </Grid>
-                            </Grid>
-                        </Box>
+                            </Box>
+                        )}
 
                         {/* Список постов */}
                         <AnimatePresence>
@@ -193,11 +230,27 @@ const Forum = () => {
                                         <CardHeader
                                             avatar={
                                                 <Avatar
-                                                    src={author ? author.avatar : ''}
-                                                    alt={author ? author.firstName : 'Автор'}
+                                                    src={author && author.avatar ? `${apiUrl}${author.avatar}` : ''}
+                                                    alt={author ? `${author.firstName} ${author.lastName}` : 'Автор'}
                                                 />
                                             }
-                                            title={author ? `${author.firstName} ${author.lastName}` : `Автор ID: ${post.authorId}`}
+                                            title={
+                                                author ? (
+                                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                        <Typography variant="h6" sx={{ mr: 1 }}>
+                                                            {author.firstName} {author.lastName}
+                                                        </Typography>
+                                                        <Chip
+                                                            label={author.role}
+                                                            color={getRoleColor(author.role)}
+                                                            size="small"
+                                                            sx={{ textTransform: 'capitalize' }}
+                                                        />
+                                                    </Box>
+                                                ) : (
+                                                    `Автор ID: ${post.authorId}`
+                                                )
+                                            }
                                             subheader={new Date(post.createdAt).toLocaleString()}
                                         />
                                         <CardContent>
@@ -218,8 +271,22 @@ const Forum = () => {
                             />
                         </Box>
                     </>
+                ) : (
+                    <Typography variant="h6">Загрузка...</Typography>
                 )}
             </StyledContainer>
+
+            {/* Snackbar для уведомлений */}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </PageWrapper>
     );
 };
