@@ -152,7 +152,7 @@ const userSlice = createSlice({
             })
             .addCase(deleteAvatar.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.data.avatar = null; // Удаляем аватар из состояния
+                state.data.avatar = null;
             })
             .addCase(deleteAvatar.rejected, (state, action) => {
                 state.status = 'failed';

@@ -1,8 +1,8 @@
-const { User } = require('../models/models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const { User, Faculty, Specialization } = require('../models/models');
 
 const userController = {
     registration: async (req, res) => {
@@ -45,7 +45,12 @@ const userController = {
                 return res.status(401).json({ message: "Not authorized" });
             }
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findByPk(decoded.userId);
+            const user = await User.findByPk(decoded.userId, {
+                include: [
+                    { model: Faculty, attributes: ['id', 'name'] },
+                    { model: Specialization, attributes: ['id', 'name'] }
+                ]
+            });
             res.json(user);
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -54,7 +59,12 @@ const userController = {
 
     findOne: async (req, res) => {
         try {
-            const user = await User.findByPk(req.params.id);
+            const user = await User.findByPk(req.params.id, {
+                include: [
+                    { model: Faculty, attributes: ['id', 'name'] },
+                    { model: Specialization, attributes: ['id', 'name'] }
+                ]
+            });
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
@@ -78,26 +88,48 @@ const userController = {
             const { firstName, lastName, email, password, role, course, recordBookNumber, facultyId, specializationId } = req.body;
             const userId = req.params.id;
 
-            // Загрузка аватара
-            let avatarPath;
+            let avatarPath = null;
+
+            // Проверяем, загружен ли аватар
             if (req.file) {
-                const uploadDir = path.join(__dirname, '../uploads/avatars');
+                // Определяем директорию для сохранения аватаров
+                const uploadDir = path.join(__dirname, '..', 'uploads', 'avatars');
+
+                // Создаём директорию, если она не существует
                 if (!fs.existsSync(uploadDir)) {
                     fs.mkdirSync(uploadDir, { recursive: true });
                 }
-                avatarPath = `/uploads/avatars/${userId}_${req.file.originalname}`;
-                fs.writeFileSync(path.join(uploadDir, `${userId}_${req.file.originalname}`), req.file.buffer);
+
+                // Генерируем уникальное имя файла
+                const fileExt = path.extname(req.file.originalname);
+                const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
+                const filePath = path.join(uploadDir, fileName);
+
+                // Сохраняем файл на диск
+                fs.writeFileSync(filePath, req.file.buffer);
+
+                // Определяем путь к аватару для сохранения в базе данных
+                avatarPath = `/uploads/avatars/${fileName}`;
             }
 
             const updateData = {
-                firstName, lastName, email, role, course, recordBookNumber, facultyId, specializationId
+                firstName,
+                lastName,
+                email,
+                role,
+                course,
+                recordBookNumber,
+                facultyId,
+                specializationId
             };
 
             if (avatarPath) {
+                // Если аватар загружен, обновляем путь
                 updateData.avatar = avatarPath;
             }
 
             if (password) {
+                // Если пароль предоставлен, хешируем его
                 updateData.passwordHash = await bcrypt.hash(password, 12);
             }
 
@@ -106,12 +138,18 @@ const userController = {
             });
 
             if (updated) {
-                const updatedUser = await User.findByPk(userId);
+                const updatedUser = await User.findByPk(userId, {
+                    include: [
+                        { model: Faculty, attributes: ['id', 'name'] },
+                        { model: Specialization, attributes: ['id', 'name'] }
+                    ]
+                });
                 res.json(updatedUser);
             } else {
                 res.status(404).json({ message: 'User not found' });
             }
         } catch (error) {
+            console.error('Update User Error:', error); // Добавьте логирование ошибки
             res.status(500).json({ message: error.message });
         }
     },

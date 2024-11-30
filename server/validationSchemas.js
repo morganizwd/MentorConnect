@@ -5,7 +5,7 @@ const userSchema = Joi.object({
     firstName: Joi.string().min(1).max(50).required(),
     lastName: Joi.string().min(1).max(50).required(),
     email: Joi.string().email().required(),
-    password: Joi.string().min(8).required(), // Только для регистрации, не сохраняйте пароль напрямую в базу данных
+    password: Joi.string().min(8).required(), 
     role: Joi.string().valid('mentee', 'mentor', 'admin').required(),
     course: Joi.number().integer().min(1).max(10).allow(null),
     recordBookNumber: Joi.number().integer().allow(null),
