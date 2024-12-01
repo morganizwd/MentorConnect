@@ -1,3 +1,4 @@
+// src/redux/slices/tagSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../axios';
 
@@ -12,8 +13,9 @@ export const fetchTagById = createAsyncThunk('tags/fetchTagById', async (id) => 
     return data;
 });
 
-export const createTag = createAsyncThunk('tags/createTag', async ({ name, userId }) => {
-    const { data } = await axios.post('/tags', { name, userId });
+// Измененный createTag thunk: принимает только name
+export const createTag = createAsyncThunk('tags/createTag', async (name) => {
+    const { data } = await axios.post('/tags', { name });
     return data;
 });
 

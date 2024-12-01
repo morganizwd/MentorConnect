@@ -1,10 +1,11 @@
+// src/components/UserProfile.jsx
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAuthMe, updateUser, deleteAvatar } from '../redux/slices/userSlice';
 import { fetchTagsByUserId, createTag, deleteTag } from '../redux/slices/tagSlice';
 import { fetchContactsByUserId, createContact, deleteContact } from '../redux/slices/contactSlice';
-import { fetchFaculties } from '../redux/slices/facultySlice'; // Импортируйте fetchFaculties
-import { fetchSpecializations } from '../redux/slices/specializationSlice'; // Импортируйте fetchSpecializations
+import { fetchFaculties } from '../redux/slices/facultySlice';
+import { fetchSpecializations } from '../redux/slices/specializationSlice';
 import {
     Container,
     Typography,
@@ -21,23 +22,35 @@ import {
     Snackbar,
     Grid,
     Stack,
-    Paper
+    Paper,
+    Card,
+    Chip,
+    Autocomplete,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import {
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Add as AddIcon,
+    Phone as PhoneIcon,
+    Telegram as TelegramIcon,
+    Link as LinkIcon,
+    VpnKey as VpnKeyIcon,
+} from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { motion } from 'framer-motion';
 
 // Импортируем изображения
 import decorative1 from '../assets/main_png.png';
 import decorative2 from '../assets/decorative2.png';
-import profileIllustration from '../assets/profile.png'; // Предположим, что это иллюстрация профиля
+import profileIllustration from '../assets/profile.png';
+import advantagePlaceholder from '../assets/advantage-placeholder.png';
 
-const apiUrl = 'http://localhost:7000'; // Переместил сюда для удобства
+const apiUrl = 'http://localhost:7000';
 
 // Styled Components
 
 const ProfileWrapper = styled(Box)(({ theme }) => ({
-    background: `url('/assets/background.jpg') no-repeat center center fixed`, // Замените на путь к вашему изображению
+    background: `url('/assets/background.jpg') no-repeat center center fixed`,
     backgroundSize: 'cover',
     minHeight: '100vh',
     display: 'flex',
@@ -94,11 +107,50 @@ const StyledButton = styled(Button)(({ theme }) => ({
     },
 }));
 
-const MotionAvatar = motion(Avatar); // Анимируемый Avatar
-const MotionTextField = motion(TextField); // Анимируемые TextField
-const MotionListItem = motion(ListItem); // Анимируемые ListItem
-const MotionAlert = motion(Alert); // Анимируемый Alert
-const MotionButton = motion(Button); // Анимированный Button
+const MotionAvatar = motion(Avatar);
+const MotionTextField = motion(TextField);
+const MotionListItem = motion(ListItem);
+const MotionAlert = motion(Alert);
+const MotionButton = motion(Button);
+
+const AdvantageCard = styled(Card)(({ theme }) => ({
+    maxWidth: 300,
+    borderRadius: theme.spacing(2),
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(5px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    textAlign: 'center',
+    padding: theme.spacing(3),
+    transition: 'transform 0.3s, box-shadow 0.3s',
+    '&:hover': {
+        transform: 'translateY(-5px)',
+        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+    },
+}));
+
+const AdvantageImage = styled(Box)(({ theme }) => ({
+    width: '80px',
+    height: '80px',
+    margin: '0 auto',
+    marginBottom: theme.spacing(2),
+    backgroundColor: '#eee',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '50%',
+}));
+
+const AdvantageTitle = styled(Typography)(({ theme }) => ({
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: theme.spacing(1),
+}));
+
+const AdvantageDescription = styled(Typography)(({ theme }) => ({
+    color: '#555',
+    lineHeight: 1.5,
+}));
 
 const UserProfile = () => {
     const dispatch = useDispatch();
@@ -113,8 +165,8 @@ const UserProfile = () => {
         lastName: '',
         email: '',
         password: '',
-        course: null, // Инициализация как null
-        recordBookNumber: null, // Инициализация как null
+        course: null,
+        recordBookNumber: null,
         facultyId: null,
         specializationId: null,
         avatar: null,
@@ -131,14 +183,14 @@ const UserProfile = () => {
         phoneNumber: '',
     });
 
-    const [openSnackbar, setOpenSnackbar] = useState(false); // Состояние для Snackbar
+    const [openSnackbar, setOpenSnackbar] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success' | 'error' | 'warning' | 'info'
 
     useEffect(() => {
         dispatch(fetchAuthMe());
-        dispatch(fetchFaculties()); // Добавьте загрузку факультетов
-        dispatch(fetchSpecializations()); // Добавьте загрузку специализаций
+        dispatch(fetchFaculties());
+        dispatch(fetchSpecializations());
     }, [dispatch]);
 
     useEffect(() => {
@@ -149,7 +201,7 @@ const UserProfile = () => {
                 lastName: user.lastName || '',
                 email: user.email || '',
                 password: '',
-                course: user.course ?? null, // Устанавливаем null вместо ''
+                course: user.course ?? null,
                 recordBookNumber: user.recordBookNumber ?? null,
                 facultyId: user.facultyId ?? null,
                 specializationId: user.specializationId ?? null,
@@ -175,7 +227,7 @@ const UserProfile = () => {
             if (name === 'course') {
                 setForm((prev) => ({
                     ...prev,
-                    course: value ? Number(value) : null, // Преобразуем в число или null
+                    course: value ? Number(value) : null,
                 }));
             } else {
                 setForm((prev) => ({
@@ -242,15 +294,14 @@ const UserProfile = () => {
         if (!form.firstName.trim()) newErrors.firstName = 'Имя обязательно';
         if (!form.lastName.trim()) newErrors.lastName = 'Фамилия обязательна';
         if (!form.email.trim()) newErrors.email = 'Электронная почта обязательна';
-        if (!form.password.trim()) newErrors.password = 'Пароль обязателен для применения изменений'; // Новая проверка
-        // Убираем обязательность facultyId и specializationId
+        if (!form.password.trim()) newErrors.password = 'Пароль обязателен для применения изменений';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleAddTag = () => {
         if (newTag.trim()) {
-            dispatch(createTag({ name: newTag, userId: user.id }))
+            dispatch(createTag(newTag))
                 .then(() => {
                     setSnackbarMessage('Тег добавлен');
                     setSnackbarSeverity('success');
@@ -349,6 +400,8 @@ const UserProfile = () => {
     const userTags = tags.filter(tag => tag.userId === user.id);
     const userContacts = contacts.filter(contact => contact.userId === user.id);
 
+    console.log('Detailed User Tags:', userTags); // Лог для отладки
+
     // Анимационные варианты
     const formVariants = {
         hidden: { opacity: 0, y: 50 },
@@ -397,7 +450,7 @@ const UserProfile = () => {
                             transition={{ duration: 0.5 }}
                         >
                             <Box sx={{ width: '100%' }}>
-                                <Typography variant="h4" gutterBottom sx={{ fontWeight: '700', color: '#333' }}>
+                                <Typography variant="h4" gutterBottom sx={{ fontWeight: '700', color: '#333', fontFamily: 'Roboto, sans-serif' }}>
                                     Профиль пользователя
                                 </Typography>
                                 <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -444,7 +497,7 @@ const UserProfile = () => {
                                             required
                                             fullWidth
                                             id="firstName"
-                                            label="Имя *" // Добавлен символ * для обязательности
+                                            label="Имя *"
                                             name="firstName"
                                             autoComplete="fname"
                                             autoFocus
@@ -473,7 +526,7 @@ const UserProfile = () => {
                                             required
                                             fullWidth
                                             id="lastName"
-                                            label="Фамилия *" // Добавлен символ * для обязательности
+                                            label="Фамилия *"
                                             name="lastName"
                                             autoComplete="lname"
                                             value={form.lastName}
@@ -501,7 +554,7 @@ const UserProfile = () => {
                                             required
                                             fullWidth
                                             id="email"
-                                            label="Электронная почта *" // Добавлен символ * для обязательности
+                                            label="Электронная почта *"
                                             name="email"
                                             autoComplete="email"
                                             value={form.email}
@@ -526,17 +579,17 @@ const UserProfile = () => {
                                         />
 
                                         <MotionTextField
-                                            required // Делает поле обязательным
+                                            required
                                             fullWidth
                                             name="password"
-                                            label="Пароль *" // Добавлен символ * для обязательности
+                                            label="Пароль *"
                                             type="password"
                                             id="password"
                                             autoComplete="current-password"
                                             value={form.password}
                                             onChange={handleChange}
                                             error={Boolean(errors.password)}
-                                            helperText={errors.password || 'Введите пароль для применения изменений'} // Обновленный helperText
+                                            helperText={errors.password || 'Введите пароль для применения изменений'}
                                             placeholder="Введите ваш пароль"
                                             variants={formVariants}
                                             initial="hidden"
@@ -559,7 +612,7 @@ const UserProfile = () => {
                                             id="course"
                                             label="Курс"
                                             name="course"
-                                            type="number" // Изменено на "number"
+                                            type="number"
                                             autoComplete="course"
                                             value={form.course !== null ? form.course : ''}
                                             onChange={handleChange}
@@ -587,7 +640,7 @@ const UserProfile = () => {
                                             name="recordBookNumber"
                                             autoComplete="recordBookNumber"
                                             value={user.recordBookNumber || 'Не указано'}
-                                            onChange={() => { }} // Не даём изменять поле
+                                            onChange={() => { }}
                                             placeholder="Введите номер вашей зачетной книжки"
                                             variants={formVariants}
                                             initial="hidden"
@@ -610,20 +663,20 @@ const UserProfile = () => {
 
                                         {/* Отображение факультета */}
                                         <Box>
-                                            <Typography variant="subtitle1" sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: '500', fontFamily: 'Roboto, sans-serif' }}>
                                                 Факультет:
                                             </Typography>
-                                            <Typography variant="body1">
+                                            <Typography variant="body1" sx={{ fontFamily: 'Roboto, sans-serif' }}>
                                                 {getFacultyName()}
                                             </Typography>
                                         </Box>
 
                                         {/* Отображение специализации */}
                                         <Box>
-                                            <Typography variant="subtitle1" sx={{ fontWeight: '500' }}>
+                                            <Typography variant="subtitle1" sx={{ fontWeight: '500', fontFamily: 'Roboto, sans-serif' }}>
                                                 Специализация:
                                             </Typography>
-                                            <Typography variant="body1">
+                                            <Typography variant="body1" sx={{ fontFamily: 'Roboto, sans-serif' }}>
                                                 {getSpecializationName()}
                                             </Typography>
                                         </Box>
@@ -652,150 +705,239 @@ const UserProfile = () => {
                                             Обновить профиль
                                         </MotionButton>
                                     </Stack>
-                                </Box> {/* Закрытие Box для формы */}
-                            </Box> {/* Закрытие Box с шириной */}
-                        </FormContainer> {/* Закрытие FormContainer */}
+                                </Box>
+                            </Box>
+                        </FormContainer>
                     </Grid>
 
                     {/* Иллюстрация профиля */}
                     <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Box>
-                            <img src={profileIllustration} alt="Иллюстрация профиля" />
+                            <img src={profileIllustration} alt="Иллюстрация профиля" style={{ maxWidth: '100%', height: 'auto' }} />
                         </Box>
                     </Grid>
                 </Grid>
 
                 {/* Секции Tags и Contacts */}
                 <Grid container spacing={4} sx={{ mt: 6 }}>
-                    {/* Секция Tags */}
+                    {/* Секция Теги */}
                     <Grid item xs={12} md={6}>
                         <Paper elevation={3} sx={{ padding: 4 }}>
                             <Stack spacing={3}>
-                                <Typography variant="h5" gutterBottom>
+                                <Typography variant="h5" gutterBottom sx={{ fontFamily: 'Roboto, sans-serif' }}>
                                     Теги
                                 </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <TextField
-                                        label="Новый тег"
-                                        value={newTag}
-                                        onChange={(e) => setNewTag(e.target.value)}
-                                        sx={{ mr: 2, flex: 1 }}
-                                        variant="outlined"
-                                        size="large"
+                                <Box>
+                                    <Autocomplete
+                                        freeSolo
+                                        options={tags.map((tag) => tag.name)}
+                                        inputValue={newTag}
+                                        onInputChange={(event, newInputValue) => {
+                                            setNewTag(newInputValue);
+                                        }}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter') {
+                                                event.preventDefault();
+                                                handleAddTag();
+                                            }
+                                        }}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                label="Добавить тег"
+                                                variant="outlined"
+                                                placeholder="Введите новый тег и нажмите Enter"
+                                                InputProps={{
+                                                    ...params.InputProps,
+                                                    endAdornment: (
+                                                        <>
+                                                            <IconButton
+                                                                color="primary"
+                                                                onClick={handleAddTag}
+                                                                edge="end"
+                                                            >
+                                                                <AddIcon />
+                                                            </IconButton>
+                                                            {params.InputProps.endAdornment}
+                                                        </>
+                                                    ),
+                                                    style: {
+                                                        fontFamily: 'Roboto, sans-serif',
+                                                        fontSize: '1.1rem',
+                                                    },
+                                                }}
+                                                InputLabelProps={{
+                                                    style: {
+                                                        fontFamily: 'Roboto, sans-serif',
+                                                        fontSize: '1.1rem',
+                                                    },
+                                                }}
+                                            />
+                                        )}
                                     />
-                                    <MotionButton
-                                        variant="contained"
-                                        onClick={handleAddTag}
-                                        sx={{ height: '56px' }}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Добавить
-                                    </MotionButton>
                                 </Box>
-                                <List>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                     {userTags.map((tag) => (
-                                        <MotionListItem
+                                        <Chip
                                             key={tag.id}
-                                            initial={{ opacity: 0, x: -50 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 50 }}
-                                            variants={{
-                                                hidden: { opacity: 0, x: -50 },
-                                                visible: { opacity: 1, x: 0 },
-                                                exit: { opacity: 0, x: 50 },
+                                            label={tag.name}
+                                            onDelete={() => handleDeleteTag(tag.id)}
+                                            color="primary"
+                                            variant="outlined"
+                                            sx={{
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1rem',
                                             }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <ListItemText primary={tag.name} />
-                                            <ListItemSecondaryAction>
-                                                <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteTag(tag.id)}>
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </ListItemSecondaryAction>
-                                        </MotionListItem>
+                                        />
                                     ))}
-                                </List>
+                                </Box>
                             </Stack>
                         </Paper>
                     </Grid>
 
-                    {/* Секция Contacts */}
+                    {/* Секция Контакты */}
                     <Grid item xs={12} md={6}>
                         <Paper elevation={3} sx={{ padding: 4 }}>
                             <Stack spacing={3}>
-                                <Typography variant="h5" gutterBottom>
+                                <Typography variant="h5" gutterBottom sx={{ fontFamily: 'Roboto, sans-serif' }}>
                                     Контакты
                                 </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                                     <TextField
                                         label="VK"
                                         name="vk"
                                         value={newContact.vk}
                                         onChange={handleContactChange}
-                                        sx={{ mr: 2, flex: '1 1 200px', mb: 2 }}
                                         variant="outlined"
                                         size="large"
+                                        placeholder="Введите VK"
+                                        sx={{ flex: '1 1 200px' }}
+                                        InputProps={{
+                                            style: {
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1.1rem',
+                                            },
+                                        }}
+                                        InputLabelProps={{
+                                            style: {
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1.1rem',
+                                            },
+                                        }}
                                     />
                                     <TextField
                                         label="Telegram"
                                         name="telegram"
                                         value={newContact.telegram}
                                         onChange={handleContactChange}
-                                        sx={{ mr: 2, flex: '1 1 200px', mb: 2 }}
                                         variant="outlined"
                                         size="large"
+                                        placeholder="Введите Telegram"
+                                        sx={{ flex: '1 1 200px' }}
+                                        InputProps={{
+                                            style: {
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1.1rem',
+                                            },
+                                        }}
+                                        InputLabelProps={{
+                                            style: {
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1.1rem',
+                                            },
+                                        }}
                                     />
                                     <TextField
                                         label="Номер телефона"
                                         name="phoneNumber"
                                         value={newContact.phoneNumber}
                                         onChange={handleContactChange}
-                                        sx={{ mr: 2, flex: '1 1 200px', mb: 2 }}
                                         variant="outlined"
                                         size="large"
+                                        placeholder="Введите номер телефона"
+                                        sx={{ flex: '1 1 200px' }}
+                                        InputProps={{
+                                            style: {
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1.1rem',
+                                            },
+                                        }}
+                                        InputLabelProps={{
+                                            style: {
+                                                fontFamily: 'Roboto, sans-serif',
+                                                fontSize: '1.1rem',
+                                            },
+                                        }}
                                     />
-                                    <MotionButton
-                                        variant="contained"
+                                    <IconButton
+                                        color="primary"
                                         onClick={handleAddContact}
-                                        sx={{ height: '56px', flex: '1 1 200px', mb: 2 }}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        size="large"
+                                        sx={{
+                                            height: '56px',
+                                            width: '56px',
+                                        }}
                                     >
-                                        Добавить
-                                    </MotionButton>
+                                        <AddIcon />
+                                    </IconButton>
                                 </Box>
-                                <List>
-                                    {userContacts.map((contact) => (
-                                        <MotionListItem
-                                            key={contact.id}
-                                            initial={{ opacity: 0, x: -50 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 50 }}
-                                            variants={{
-                                                hidden: { opacity: 0, x: -50 },
-                                                visible: { opacity: 1, x: 0 },
-                                                exit: { opacity: 0, x: 50 },
-                                            }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <ListItemText
-                                                primary={
-                                                    <>
-                                                        {contact.vk && <Typography>VK: {contact.vk}</Typography>}
-                                                        {contact.telegram && <Typography>Telegram: {contact.telegram}</Typography>}
-                                                        {contact.phoneNumber && <Typography>Телефон: {contact.phoneNumber}</Typography>}
-                                                    </>
-                                                }
-                                            />
-                                            <ListItemSecondaryAction>
-                                                <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteContact(contact.id)}>
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </ListItemSecondaryAction>
-                                        </MotionListItem>
-                                    ))}
-                                </List>
+                                <Box>
+                                    {userContacts.length > 0 ? (
+                                        <Grid container spacing={2}>
+                                            {userContacts.map((contact) => (
+                                                <Grid item xs={12} sm={6} key={contact.id}>
+                                                    <Card
+                                                        sx={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            padding: 2,
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                                        }}
+                                                    >
+                                                        {contact.vk && <LinkIcon sx={{ mr: 1, color: '#4c75a3' }} />}
+                                                        {contact.telegram && <TelegramIcon sx={{ mr: 1, color: '#0088cc' }} />}
+                                                        {contact.phoneNumber && <PhoneIcon sx={{ mr: 1, color: '#4caf50' }} />}
+                                                        <Typography
+                                                            variant="body1"
+                                                            sx={{
+                                                                flexGrow: 1,
+                                                                fontFamily: 'Roboto, sans-serif',
+                                                                fontSize: '1rem',
+                                                            }}
+                                                        >
+                                                            {contact.vk && (
+                                                                <span>
+                                                                    <strong>VK:</strong> {contact.vk}
+                                                                </span>
+                                                            )}
+                                                            {contact.telegram && (
+                                                                <span>
+                                                                    <strong> Telegram:</strong> {contact.telegram}
+                                                                </span>
+                                                            )}
+                                                            {contact.phoneNumber && (
+                                                                <span>
+                                                                    <strong> Телефон:</strong> {contact.phoneNumber}
+                                                                </span>
+                                                            )}
+                                                        </Typography>
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="delete"
+                                                            onClick={() => handleDeleteContact(contact.id)}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </Card>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    ) : (
+                                        <Typography variant="body2" color="textSecondary" sx={{ fontFamily: 'Roboto, sans-serif' }}>
+                                            Нет добавленных контактов.
+                                        </Typography>
+                                    )}
+                                </Box>
                             </Stack>
                         </Paper>
                     </Grid>
@@ -809,12 +951,13 @@ const UserProfile = () => {
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%', fontFamily: 'Roboto, sans-serif' }}>
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
         </ProfileWrapper>
     );
+
 };
 
 export default UserProfile;
